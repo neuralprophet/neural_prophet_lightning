@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>Quickstart - NeuralProphet</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Quickstart";
+    var mkdocs_page_input_path = "README.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> NeuralProphet</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <p class="caption"><span class="caption-text">NeuralProphet</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href=".">Quickstart</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#install">Install</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#import">Import</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#input-data">Input Data</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#simple-model">Simple Model</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#validation">Validation</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="model-overview/">Model Overview</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Components</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="model/trend/">Trend</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="model/seasonality/">Seasonality</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="model/auto-regression/">Auto-Regression</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="model/lagged-regressors/">Lagged Regressors</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="model/events/">Events</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="model/future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="contribute/">Contribute</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">NeuralProphet</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>NeuralProphet &raquo;</li>
+        
+      
+    
+    <li>Quickstart</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p>The documentation is a work in progress.</p>
+<h1 id="quick-start-guide">Quick Start Guide</h1>
+<p>This page contains details of how you can build a simple model using NeuralProphet with 
+minimal features.</p>
+<h2 id="install">Install</h2>
+<p>After downloading the code repository (via <code>git clone</code>), change to the repository directory (<code>cd neural_prophet</code>) and install neuralprophet as python package with
+<code>pip install .</code></p>
+<p>Note: If you plan to use the package in a Jupyter notebook, it is recommended to install the 'live' package version with <code>pip install .[live]</code>.
+This will allow you to enable <code>plot_live_loss</code> in the <code>train</code> function to get a live plot of train (and validation) loss.</p>
+<h3 id="import">Import</h3>
+<p>Now you can use NeuralProphet in your code:</p>
+<pre><code class="language-python">from neuralprophet import NeuralProphet
+</code></pre>
+<h2 id="input-data">Input Data</h2>
+<p>The input data format expected by the <code>neural_prophet</code> package is the same as in original 
+<code>prophet</code>. It should have two columns, <code>ds</code> which has the timestamps and <code>y</code> column which
+contains the observed values of the time series. Throughout this documentation, we 
+will be using the time series data of the log daily page views for the <a href="https://en.wikipedia.org/wiki/Peyton_Manning">Peyton Manning</a>
+Wikipedia page. The data can be imported as follows.</p>
+<pre><code class="language-python">import pandas as pd
+df = pd.read_csv('../example_data/example_wp_log_peyton_manning.csv')
+</code></pre>
+<p>The format of the data looks like below.</p>
+<table>
+<thead>
+<tr>
+<th>ds</th>
+<th>y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2007-12-10</td>
+<td>9.59</td>
+</tr>
+<tr>
+<td>2007-12-11</td>
+<td>8.52</td>
+</tr>
+<tr>
+<td>2007-12-12</td>
+<td>8.18</td>
+</tr>
+<tr>
+<td>2007-12-13</td>
+<td>8.07</td>
+</tr>
+<tr>
+<td>2007-12-14</td>
+<td>7.89</td>
+</tr>
+</tbody>
+</table>
+<h2 id="simple-model">Simple Model</h2>
+<p>A simple model with <code>neural_prophet</code> for this dataset can be fitted by creating
+an object of the <code>NeuralProphet</code> class as follows and calling the fit function. This 
+fits a model with the default settings in the model.</p>
+<pre><code class="language-python">m = NeuralProphet()
+metrics = m.fit(df)
+</code></pre>
+<p>Once the model is fitted, we can make forecasts using the fitted model. For this, we first
+need to create a future dataframe consisting of the time steps into the future that we need
+to forecast for. <code>NeuralProphet</code> provides the helper function <code>make_future_dataframe</code> for
+this purpose.</p>
+<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365)
+forecast = m.predict(future)
+</code></pre>
+<h2 id="plotting">Plotting</h2>
+<p>With the forecasts obtained from the model, you can visualize them.</p>
+<pre><code class="language-python">forecasts_plot = m.plot(forecast)
+</code></pre>
+<p><img alt="plot-forecasts-1" src="./images/plot_forecasts_simple_1.png" style="height:350px" /></p>
+<p>This is a simple model with a trend and a weekly seasonality and a yearly seasonality. You can also look at the individual components
+separately. </p>
+<pre><code class="language-python">fig_comp = m.plot_components()
+</code></pre>
+<p><img alt="plot-comp-1" src="./images/plot_comp_simple_1.png" style="height:500px" /></p>
+<p>The individual coefficient values can also be plotted as below to gain further insights.</p>
+<pre><code class="language-python">fig_param = m.plot_components()
+</code></pre>
+<p><img alt="plot-param-1" src="./images/plot_param_simple_1.png" style="height:600px" /></p>
+<h2 id="validation">Validation</h2>
+<p>Model validation for NeuralProphet can be done in two ways. Users can split the dataset manually to
+validate after the model fitting like below by specifying the fraction of data to be used for validation
+in the argument <code>valida_p</code>. This validation set is reserved from the end of the series.</p>
+<pre><code class="language-python">m = NeuralProphet()
+df_train, df_val = m.split_df(df, valid_p=0.2)
+train_metrics = m.fit(df_train)
+val_metrics = m.test(df_val)
+</code></pre>
+<p>You can now look at the training and validation metrics separately. You can also perform validation 
+per every epoch during model fitting. This is done as follows by setting the <code>validate_each_epoch</code> argument
+in the <code>fit</code> function call.</p>
+<pre><code class="language-python"># or evaluate while training
+m = NeuralProphet()
+metrics = m.fit(df, validate_each_epoch=True, valid_p=0.2)
+</code></pre>
+<!-- highlight nth step -->
+<!-- plot_last_forecast -->
+<!-- hyperparameter tuning -->
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="model-overview/" class="btn btn-neutral float-right" title="Model Overview">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="model-overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

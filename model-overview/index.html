@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Model Overview - NeuralProphet</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Model Overview";
+    var mkdocs_page_input_path = "model-overview.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> NeuralProphet</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <p class="caption"><span class="caption-text">NeuralProphet</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="..">Quickstart</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Model Overview</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#time-series-components">Time Series Components</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#data-preprocessing">Data Preprocessing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#when-to-use-neuralprophet">When to Use NeuralProphet</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Components</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/trend/">Trend</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/seasonality/">Seasonality</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/auto-regression/">Auto-Regression</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/lagged-regressors/">Lagged Regressors</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/events/">Events</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../contribute/">Contribute</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">NeuralProphet</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>NeuralProphet &raquo;</li>
+        
+      
+    
+    <li>Model Overview</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="overview-of-the-neuralprophet-model">Overview of the NeuralProphet Model</h1>
+<p>NeuralProphet is a Neural Network based PyTorch implementation of a user-friendly time series forecasting tool for practitioners.
+This is heavily inspired by <a href="https://facebook.github.io/prophet/">Prophet</a>, which is the popular forecasting tool developed by Facebook. 
+NeuralProphet is developed in a fully modular architecture which makes it scalable to add any additional components
+in the future. Our vision is to develop a simple to use forecasting tool for users while retaining the original objectives of
+Prophet such as interpretability, configurability and providing much more such as the automatic differencing capabilities by using PyTorch as
+the backend.       </p>
+<h2 id="time-series-components">Time Series Components</h2>
+<p>NeuralProphet is a decomposable time series model with the components, trend, seasonality, auto-regression, special events,
+future regressors and lagged regressors. Future regressors are external variables which have known future values for the forecast
+period whereas the lagged regressors are those external variables which only have values for the observed period. Trend can be 
+modelled either as a linear or a piece-wise linear trend by using changepoints. Seasonality
+is modelled using fourier terms and thus can handle multiple seasonalities for high-frequency data. Auto-regression is handled using an
+implementation of <a href="https://github.com/ourownstory/AR-Net">AR-Net</a>, an Auto-Regressive Feed-Forward Neural Network for time series. 
+Lagged regressors are also modelled using separate Feed-Forward Neural Networks. Future regressors and special
+events are both modelled as covariates of the model with dedicated coefficients. For more details, refer 
+to the documentation of the individual components. </p>
+<h2 id="data-preprocessing">Data Preprocessing</h2>
+<p>We perform a few data pre-processing steps in the model. For the observed values of the time series, users can specify whether
+they would like the values to be normalized. By default, the <code>y</code> values would be min-max normalized. If the user specifically, sets the
+<code>normalize_y</code> argument to <code>true</code>, the data is z-score normalized. Normalization can be performed for covariates as well.
+The default mode for normalization of covariates is <code>auto</code>. In this mode, apart from binary features such as events, all others are
+z-score normalized. </p>
+<p>We also perform an imputation in-case there are missing values in the data. However, imputation is only done
+if auto-regression is enabled in the model. Otherwise, the missing values do not really matter for the regression model. No
+special imputation is done for binary data. They are simply taken as <code>0</code> for the missing dates. For the numeric data,
+including the <code>y</code> values, normalization is a two-step process. First, small gaps are filled with a linear imputation
+ and then the more larger gaps are filled with rolling averages. When auto-regression is enabled, the observed <code>y</code> values are
+ preprocessed in a moving window format to learn from lagged values. This is done for lagged regressors as well.</p>
+<h2 id="when-to-use-neuralprophet">When to Use NeuralProphet</h2>
+<p>NeuralProphet can produce both single step and multi step-ahead forecasts. At the moment, NeuralProphet builds
+ models univariately. This means that if you have many series that you expect to produce forecasts for, you need to do
+ this one at a time. However, in future we hope to integrate the capability of global forecasting models into NeuralProphet.</p>
+<p>NeuralProphet helps build forecasting models for scenarios where there are other external factors which can drive the behaviour
+of the target series over time. Using such external information can heavily improve forecasting models
+rather than relying only on the autocorrelation of the series. NeuralProphet tool is suitable for forecasting practitioners that wish to gain insights into the overall modelling process
+by visualizing the forecasts, the individual components as well as the underlying coefficients of the model. Through our descriptive
+plots, users can visualize the interaction of the individual components. They also have the power to control these coefficients as required by introducing sparsity through regularization. They can
+combine the components additively or multiplicatively as per their domain knowledge. </p>
+<p>This is an ongoing effort. Therefore, NeuralProphet will be equipped with even much more features in the upcoming
+releases.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../model/trend/" class="btn btn-neutral float-right" title="Trend">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href=".." class="btn btn-neutral" title="Quickstart"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../model/trend/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
