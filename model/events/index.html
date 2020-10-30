@@ -405,11 +405,11 @@ their agrgegated effect is shown on the <code>events_additive</code> column.</p>
 the <code>Additive Events</code></p>
 <pre><code class="language-python">fig_comp = m.plot_components(forecast)
 </code></pre>
-<p><img alt="plot-comp-1" src="./images/plot_comp_events_1.png" /></p>
+<p><img alt="plot-comp-1" src="../../images/plot_comp_events_1.png" style="height:400px" /></p>
 <p>If you want to have a look at the coefficients of the events, the <code>plot_parameters</code> function is helpful.</p>
 <pre><code class="language-python">fig_param = m.plot_parameters()
 </code></pre>
-<p><img alt="plot-param-1" src="../../images/plot_param_events_1.png" /></p>
+<p><img alt="plot-param-1" src="../../images/plot_param_events_1.png" style="height:550px" /></p>
 <h2 id="multiplicative-events">Multiplicative Events</h2>
 <p>The default mode for events in <code>neural_prophet</code> is additive. However, events can also be modelled
 in a multiplicative format. For this, when adding the events configs to the <code>NeuralProphet</code> object,
@@ -418,9 +418,9 @@ we need to set the <code>mode</code> to <code>multiplicative</code> as below.</p
 </code></pre>
 <p>All the other steps are the same as for the <code>additive</code> mode. Now, when you plot the components,
 the event components will appear as percentages.</p>
-<p><img alt="plot-comp-2" src="../../images/plot_comp_events_2.png" /></p>
+<p><img alt="plot-comp-2" src="../../images/plot_comp_events_2.png" style="height:400px" /></p>
 <p>In the same manner, the coefficients too, will now appear as percentages when plotted.</p>
-<p><img alt="plot-param-2" src="../../images/plot_param_events_2.png" /></p>
+<p><img alt="plot-param-2" src="../../images/plot_param_events_2.png" style="height:550px" /></p>
 <h2 id="event-windows">Event Windows</h2>
 <p>You can also provide windows for events. This way, you can consider the days around a 
 particular event also as special events by providing the arguments <code>lower_window</code> and 
@@ -430,10 +430,10 @@ By default, the values for these windows are <code>0</code>, which means windows
 </code></pre>
 <p>According to this specification, for both <code>superbowl</code> and <code>playoff</code> events, three special events will be 
 modelled, the event date, the previous day and the next day. These will be visible in the component plots as below.</p>
-<p><img alt="plot-comp-3" src="../../images/plot_comp_events_3.png" /></p>
+<p><img alt="plot-comp-3" src="../../images/plot_comp_events_3.png" style="height:550px" /></p>
 <p>In the parameters plot too, there will now be <code>superbowl_+1</code> and <code>superbowl_-1</code> which correspond to the coefficients of the
 day following and previous to the <code>superbowl</code> event. The <code>playoff</code> event also has the same new coefficients.</p>
-<p><img alt="plot-param-3" src="../../images/plot_param_events_3.png" /></p>
+<p><img alt="plot-param-3" src="../../images/plot_param_events_3.png" style="height:550px" /></p>
 <p>If you want to define different windows for the individual events, this can also be done as follows.</p>
 <pre><code class="language-python">m = m.add_events(&quot;superbowl&quot;, lower_window=-1, upper_window=1)
 m = m.add_events(&quot;playoff&quot;, upper_window=2)
@@ -450,7 +450,7 @@ unlike for user specified events, the windows will be the same for all the count
 </code></pre>
 <p>This example will add all the <code>US</code> holidays into the model in <code>additive</code> format. The coefficients of the
 individual events will now look like below.</p>
-<p><img alt="plot-param-3" src="../../images/plot_param_events_4.png" /></p>
+<p><img alt="plot-param-3" src="../../images/plot_param_events_4.png" style="height:600px" /></p>
 <h2 id="regularization-for-events">Regularization for Events</h2>
 <p>Events can also support regularization of the coefficients. You can specify the regularization
 when adding the event configs into the <code>NeuralProphet</code> object like below.</p>

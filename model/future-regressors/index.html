@@ -243,12 +243,12 @@ forecast = m.predict(df=future)
 like below.</p>
 <pre><code class="language-python">fig_comp = m.plot_components(forecast)
 </code></pre>
-<p><img alt="plot-comp-1" src="./images/plot_comp_future_reg_1.png" style="height:850px;width:500px" /></p>
+<p><img alt="plot-comp-1" src="../../images/plot_comp_future_reg_1.png" style="height:850px;width:500px" /></p>
 <p>In addition to the components like seasonality, auto-regression and trend it also shows
 a plot for the additive future regressors. The coefficients of the future regressors can also be plotted.</p>
 <pre><code class="language-python">fig_param = m.plot_parameters()
 </code></pre>
-<p><img alt="plot-param-1" src="./images/plot_param_future_reg_1.png" style="height:850px;width:500px" /></p>
+<p><img alt="plot-param-1" src="../../images/plot_param_future_reg_1.png" style="height:850px;width:500px" /></p>
 <h2 id="multiplicative-future-regressors">Multiplicative Future Regressors</h2>
 <p>Future regressors can also be added in multiplicative mode. You simply need to set 
 the mode to <code>multiplicative</code> when adding the regressors to the <code>NeuralProphet</code> object.</p>
@@ -258,11 +258,11 @@ m = m.add_future_regressor(name='B')
 <p>In the above example, we have both additive and multiplicative regressors, where <code>A</code>
 is multiplicative and <code>B</code> is additive. All the other steps in the fitting and the forecasting
 processes are the same. The components plot looks as below.</p>
-<p><img alt="plot-comp-2" src="./images/plot_comp_future_reg_2.png" style="height:850px;width:500px" /></p>
+<p><img alt="plot-comp-2" src="../../images/plot_comp_future_reg_2.png" style="height:850px;width:500px" /></p>
 <p>There are two individual plots for the additive and multiplicative regressors, where 
 the multiplicative component is shown as a percentage. In the same manner, the
 coefficients will appear in a plot like below.</p>
-<p><img alt="plot-param-2" src="./images/plot_param_future_reg_2.png" style="height:850px;width:500px" /></p>
+<p><img alt="plot-param-2" src="../../images/plot_param_future_reg_2.png" style="height:850px;width:500px" /></p>
 <h2 id="regularization-for-future-regressors">Regularization for Future Regressors</h2>
 <p>We can add regularization into the future regressors as below. </p>
 <pre><code class="language-python">m = m.add_future_regressor(name='A', regularization=0.05)

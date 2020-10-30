@@ -58,20 +58,6 @@
                 <ul class="current">
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Trend</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#default-trend-modelling">Default Trend Modelling:</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#automatic-sparse-changepoint-detection">Automatic sparse changepoint detection:</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#underfit-no-changepoints">Underfit: no changepoints</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#smooth-underfit-10x-regularized-trend-100-changepoints">Smooth Underfit: 10x regularized trend, 100 changepoints</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#overfit-direct-gradient-100-changepoints">Overfit: Direct gradient, 100 changepoints</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#overfit-direct-gradient-discontinuous-trend-100-changepoints">Overfit: Direct gradient, discontinuous trend, 100 changepoints</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#smooth-overfit-01xregularized-trend-100-changepoints">Smooth overfit: 0.1xregularized trend, 100 changepoints</a>
-    </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../seasonality/">Seasonality</a>
@@ -126,26 +112,8 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="trend">Trend</h1>
-<h2 id="default-trend-modelling">Default Trend Modelling:</h2>
-<p>Direct gradient, 5 changepoints</p>
-<pre><code class="language-python">m = NeuralProphet(
-    yearly_seasonality=False,
-    weekly_seasonality=False,
-    daily_seasonality=False,
-)
-metrics = m.fit(df)
-metrics
-</code></pre>
-<p>Forecasting</p>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
-forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_comp = m.plot_components(forecast)
-fig_param = m.plot_parameters()
-</code></pre>
-<h2 id="automatic-sparse-changepoint-detection">Automatic sparse changepoint detection:</h2>
-<p>2x regularized trend, 100 changepoints</p>
+                <h1 id="modelling-trend">Modelling Trend</h1>
+<p>This is a minimalistic example of trend modelling in Neuralprophet by defining changepoints.</p>
 <pre><code class="language-python">m = NeuralProphet(
     n_changepoints=100,
     trend_smoothness=2,
@@ -158,91 +126,11 @@ metrics = m.fit(df)
 </code></pre>
 <pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
 forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_param = m.plot_parameters()
-
 </code></pre>
-<h2 id="underfit-no-changepoints">Underfit: no changepoints</h2>
-<pre><code class="language-python">m = NeuralProphet(
-    n_changepoints=0,
-    trend_smoothness=0,
-    yearly_seasonality=False,
-    weekly_seasonality=False,
-    daily_seasonality=False,
-)
-metrics = m.fit(df, validate_each_epoch=True)
-</code></pre>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
-forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_param = m.plot_parameters()
-</code></pre>
-<h2 id="smooth-underfit-10x-regularized-trend-100-changepoints">Smooth Underfit: 10x regularized trend, 100 changepoints</h2>
-<pre><code class="language-python">m = NeuralProphet(
-    n_changepoints=100,
-    trend_smoothness=5,
-    trend_threshold=True,
-    yearly_seasonality=False,
-    weekly_seasonality=False,
-    daily_seasonality=False,
-)
-metrics = m.fit(df)
-</code></pre>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
-forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_param = m.plot_parameters()
-
-</code></pre>
-<h2 id="overfit-direct-gradient-100-changepoints">Overfit: Direct gradient, 100 changepoints</h2>
-<pre><code class="language-python">m = NeuralProphet(
-    n_changepoints=100,
-    trend_smoothness=0,
-    yearly_seasonality=False,
-    weekly_seasonality=False,
-    daily_seasonality=False,
-)
-metrics = m.fit(df)
-</code></pre>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
-forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_param = m.plot_parameters()
-</code></pre>
-<h2 id="overfit-direct-gradient-discontinuous-trend-100-changepoints">Overfit: Direct gradient, discontinuous trend, 100 changepoints</h2>
-<pre><code class="language-python">m = NeuralProphet(
-    n_changepoints=100,
-    trend_smoothness=-1,
-    yearly_seasonality=False,
-    weekly_seasonality=False,
-    daily_seasonality=False,
-)
-metrics = m.fit(df)
-
-</code></pre>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
-forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_param = m.plot_parameters()
-</code></pre>
-<h2 id="smooth-overfit-01xregularized-trend-100-changepoints">Smooth overfit: 0.1xregularized trend, 100 changepoints</h2>
-<pre><code class="language-python">m = NeuralProphet(
-    n_changepoints=100,
-    trend_smoothness=0.1,
-    trend_threshold=True,
-    yearly_seasonality=False,
-    weekly_seasonality=False,
-    daily_seasonality=False,
-)
-metrics = m.fit(df)
-
-</code></pre>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
-forecast = m.predict(future)
-fig_fit = m.plot(forecast)
-fig_param = m.plot_parameters()
-
-</code></pre>
+<p>The components plot looks like below with only trend and residuals as a components.</p>
+<p><img alt="plot-comp-1" src="../../images/plot_comp_trend_1.png" style="height:400px" /></p>
+<p>The coefficients plot should show the coefficients corresponding to the 100 changepoints.</p>
+<p><img alt="plot-param-1" src="../../images/plot_param_trend_1.png" style="height:400px" /></p>
               
             </div>
           </div>

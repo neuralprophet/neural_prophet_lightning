@@ -113,6 +113,49 @@
             <div class="section">
               
                 <h1 id="modelling-auto-regression">Modelling Auto-Regression</h1>
+<p>AR-Net can be enabled in the NeuralProphet by simply setting an appropriate value to the
+<code>n_lags</code> parameter of the <code>NeuralProphet</code> object.</p>
+<pre><code class="language-python">m = NeuralProphet(
+    n_forecasts=3,
+    n_lags=5,
+    yearly_seasonality=False,
+    weekly_seasonality=False,
+    daily_seasonality=False,
+)
+</code></pre>
+<p>In the above example, we create a forecasting scenario which feeds 5 lags into AR-Net and receives
+3 steps as forecasts. Once you have the AR-Net enabled, during forecasting your <code>future_periods</code> value
+should be equal to the <code>n_forecasts</code> value specified when creating the <code>NeuralProphet</code> object. Whichever
+value you specify for <code>future_periods</code>, it will be converted to the value of <code>n_forecasts</code> with a notice
+to the user. This is because, since the AR-Net is built during training such that it has an ouptut size
+of <code>n_forecasts</code>, it cannot support any other value during testing.</p>
+<p>The plotted components should look like below.</p>
+<p><img alt="plot-comp-1" src="../../images/plot_comp_ar_1.png" style="height:600px" /></p>
+<p>You can now see auto-regression as a separate component. The corresponding coefficients look like
+below.</p>
+<p><img alt="plot-param-1" src="../../images/plot_param_ar_1.png" style="height:600px" /></p>
+<p>You can see the relevance of each of the lags when modelling the autocorrelation. You can also specify the <code>num_hidden_layers</code> for the AR-Net.</p>
+<pre><code class="language-python">m = NeuralProphet(
+    n_forecasts=3,
+    n_lags=5,
+    num_hidden_layers=2,
+    yearly_seasonality=False,
+    weekly_seasonality=False,
+    daily_seasonality=False
+)
+</code></pre>
+<p>Regularization in AR-Net is done by setting the <code>ar_sparsity</code> parameter in the <code>NeuralProphet</code> object
+like below. <code>ar_sparsity</code> should take a value in between 0-1. </p>
+<pre><code class="language-python">m = NeuralProphet(
+    n_forecasts=3,
+    n_lags=5,
+    num_hidden_layers=2,
+    ar_sparsity=0.01,
+    yearly_seasonality=False,
+    weekly_seasonality=False,
+    daily_seasonality=False
+)
+</code></pre>
               
             </div>
           </div>
