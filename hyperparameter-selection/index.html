@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Hyperparameter Selection - NeuralProphet</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Hyperparameter Selection";
+    var mkdocs_page_input_path = "hyperparameter-selection.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> NeuralProphet</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <p class="caption"><span class="caption-text">NeuralProphet</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../model-overview/">Model Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../changes-from-prophet/">Changes from Prophet</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Quickstart</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Components</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/trend/">Trend</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/seasonality/">Seasonality</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/auto-regression/">Auto-Regression</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/lagged-regressors/">Lagged Regressors</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/events/">Events</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../model/future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Parameters</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Hyperparameter Selection</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#forecast-horizon">Forecast horizon</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#autoregression">Autoregression</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#model-training-related-parameters">Model Training Related Parameters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#increasing-depth-of-the-model">Increasing Depth of the Model</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#data-preprocessing-related-parameters">Data Preprocessing Related Parameters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#trend-related-parameters">Trend Related Parameters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#seasonality-related-parameters">Seasonality Related Parameters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#regularization-related-parameters">Regularization Related Parameters</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../contribute/">Contribute</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">NeuralProphet</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Model Parameters &raquo;</li>
+        
+      
+    
+    <li>Hyperparameter Selection</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="selecting-the-hyperparameters">Selecting the Hyperparameters</h1>
+<p>NeuralProphet has a number of hyperparameters that need to be specified by the user.
+If not specified, default values for these hyperparameters will be used. They
+are as follows.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>growth</code></td>
+<td align="left">linear</td>
+</tr>
+<tr>
+<td align="left"><code>changepoints</code></td>
+<td align="left">None</td>
+</tr>
+<tr>
+<td align="left"><code>n_changepoints</code></td>
+<td align="left">5</td>
+</tr>
+<tr>
+<td align="left"><code>changepoints_range</code></td>
+<td align="left">0.8</td>
+</tr>
+<tr>
+<td align="left"><code>trend_reg</code></td>
+<td align="left">0</td>
+</tr>
+<tr>
+<td align="left"><code>trend_reg_threshold</code></td>
+<td align="left">False</td>
+</tr>
+<tr>
+<td align="left"><code>yearly_seasonality</code></td>
+<td align="left">auto</td>
+</tr>
+<tr>
+<td align="left"><code>weekly_seasonality</code></td>
+<td align="left">auto</td>
+</tr>
+<tr>
+<td align="left"><code>daily_seasonality</code></td>
+<td align="left">auto</td>
+</tr>
+<tr>
+<td align="left"><code>seasonality_mode</code></td>
+<td align="left">additive</td>
+</tr>
+<tr>
+<td align="left"><code>seasonality_reg</code></td>
+<td align="left">None</td>
+</tr>
+<tr>
+<td align="left"><code>n_forecasts</code></td>
+<td align="left">1</td>
+</tr>
+<tr>
+<td align="left"><code>n_lags</code></td>
+<td align="left">0</td>
+</tr>
+<tr>
+<td align="left"><code>num_hidden_layers</code></td>
+<td align="left">0</td>
+</tr>
+<tr>
+<td align="left"><code>d_hidden</code></td>
+<td align="left">None</td>
+</tr>
+<tr>
+<td align="left"><code>ar_sparsity</code></td>
+<td align="left">None</td>
+</tr>
+<tr>
+<td align="left"><code>learning_rate</code></td>
+<td align="left">None</td>
+</tr>
+<tr>
+<td align="left"><code>epochs</code></td>
+<td align="left">40</td>
+</tr>
+<tr>
+<td align="left"><code>loss_func</code></td>
+<td align="left">Huber</td>
+</tr>
+<tr>
+<td align="left"><code>normalize_y</code></td>
+<td align="left">auto</td>
+</tr>
+<tr>
+<td align="left"><code>impute_missing</code></td>
+<td align="left">True</td>
+</tr>
+<tr>
+<td align="left"><code>log_level</code></td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><br /></p>
+<h2 id="forecast-horizon">Forecast horizon</h2>
+<p><code>n_forecasts</code> is the size of the forecast horizon. 
+The default value of 1 means that the model forecasts one step into the future. </p>
+<h2 id="autoregression">Autoregression</h2>
+<p><code>n_lags</code> defines whether the AR-Net is enabled (if <code>n_lags</code> &gt; 0) or not.
+The value for <code>n_lags</code> is usually recommended to be greater than <code>n_forecasts</code>, if possible
+since it is preferable for the FFNNs to encounter at least <code>n_forecasts</code> length of the past
+in order to predict <code>n_forecasts</code> into the future. Thus, <code>n_lags</code> determine how far into the 
+past the auto-regressive dependencies should be considered. This could be a value chosen based
+on either domain expertise or an empirical analysis.  </p>
+<h2 id="model-training-related-parameters">Model Training Related Parameters</h2>
+<p>NeuralProphet is fit with stochastic gradient descent - more precisely, with an AdamW optimizer and a One-Cycle policy. 
+If the parameter <code>learning_rate</code> is not specified, a learning rate range test is conducted to determin the optimal learning rate. 
+The <code>epochs</code> and the <code>loss_func</code> are two other parameters that directly affect the model training process. 
+If, by looking at the live loss plot, the model looks like it's underfitting, the number of <code>epochs</code>  or the <code>learning_rate</code> can be increased. 
+On the other hand, if the model looks like it is overfitting to the training data, the number of <code>epochs</code>  or the <code>learning_rate</code> can be reduced. 
+The default for <code>epochs</code> is 40, which could likely be reduced for most datasets. 
+The default loss function is Huber loss, which is considered to be robust to outliers. 
+However, you can select from <code>Huber</code>, <code>MAE</code> and <code>MSE</code> or any PyTorch loss function. </p>
+<h2 id="increasing-depth-of-the-model">Increasing Depth of the Model</h2>
+<p><code>num_hidden_layers</code> defines the number of hidden layers of the FFNNs used in the overall model. This includes the
+AR-Net and the FFNN of the lagged regressors. The default is 0, meaning that the FFNNs will have only one final layer
+of size <code>n_forecasts</code>. Adding more layers results in increased complexity and also increased computational time, consequently.
+However, the added number of hidden layers can help build more complex relationships especially useful for the lagged 
+regressors. To tradeoff between the computational complexity and the improved accuracy the <code>num_hidden_layers</code> is recommended
+to be set in between 1-2. Nevertheless, in most cases a good enough performance can be achieved by having no hidden layers at all.</p>
+<p><code>d_hidden</code> is the number of units in the hidden layers. This is only considered if <code>num_hidden_layers</code> is specified, 
+otherwise ignored. The default value for <code>d_hidden</code> if not specified is (<code>n_lags</code> + <code>n_forecasts</code>). If tuned manually, the recommended
+practice is to set a value in between <code>n_lags</code> and <code>n_forecasts</code> for <code>d_hidden</code>. It is also important to note that with the current
+implementation, NeuralProphet sets the same <code>d_hidden</code> for the all the hidden layers.</p>
+<h2 id="data-preprocessing-related-parameters">Data Preprocessing Related Parameters</h2>
+<p><code>normalize_y</code> is about scaling the time series before modelling. By default, NeuralProphet performs a (soft) min-max normalization of the
+time series. Normalization can help the model training process if the series values fluctuate heavily. However, if the series does 
+not such scaling, users can turn this off or select another normalization. </p>
+<p><code>impute_missing</code> is about imputing the missing values in a given series. S
+imilar to Prophet, NeuralProphet too can work with missing values when it is in the regression mode without the AR-Net. 
+However, when the autocorrelation needs to be captured, it is necessary for the missing values to be imputed, since then the modelling becomes an ordered problem. 
+Letting this parameter at its default can get the job done perfectly in most cases.</p>
+<h2 id="trend-related-parameters">Trend Related Parameters</h2>
+<p>You can find a hands-on example at <a href="https://github.com/ourownstory/neural_prophet/blob/master/example_notebooks/trend_peyton_manning.ipynb"><code>example_notebooks/trend_peyton_manning.ipynb</code></a>.</p>
+<p>The trend flexibility if primarily controlled by <code>n_changepoints</code>, which sets the number of points where the trend rate may change.
+Additionally, the trend rate changes can be regularized by setting <code>trend_reg</code> to a value greater zero.<br />
+This is a useful feature that can be used to automatically detect relevant changepoints.</p>
+<p><code>changepoints_range</code> controls the range of training data used to fit the trend. 
+The default value of 0.8 means that no changepoints are set in the last 20 percent of training data.</p>
+<p>If a list of <code>changepoints</code> is supplied, <code>n_changepoints</code> and <code>changepoints_range</code>  are ignored. 
+This list is instead used to set the dates at which the trend rate is allowed to change.</p>
+<p><code>n_changepoints</code> is the number of changepoints selected along the series for the trend. The default
+value for this is 5.</p>
+<h2 id="seasonality-related-parameters">Seasonality Related Parameters</h2>
+<p><code>yearly_seasonality</code>, <code>weekly_seasonality</code> and <code>daily_seasonality</code> are about which seasonal components to be modelled. For example, if you use temperature data, 
+you can probably select daily and yearly. Using number of passengers using the subway would more likely have a weekly seasonality for example. 
+Setting these seasonalities at the default <code>auto</code> mode, lets NeuralProphet decide which of them to include depending on how much data available. For example, the yearly seasonality will not
+be considered if less than two years data available. In the same manner, the weekly seasonality will not be considered if less than two weeks available 
+etc... However, if the user if certain that the series does not include yearly, weekly or daily seasonality, and thus the model should not be
+distorted by such components, they can explicitly turn them off by setting the respective components to <code>False</code>. Apart from that, the parameters
+<code>yearly_seasonality</code>, <code>weekly_seasonality</code> and <code>daily_seasonality</code> can also be set to number of Fourier terms of the respective seasonalities. 
+The defaults are 6 for yearly, 4 for weekly and 6 for daily. Users can set this to any number they want. If the number of terms is 6 for yearly, that
+effectively makes the total number of Fourier terms for the yearly seasonality 12 (6*2), to accommodate both sine and cosine terms.
+Increasing the number of Fourier terms can make the model capable of capturing quite complex seasonal patterns. However, similar to the <code>num_hidden_layers</code>,
+this too results in added model complexity. Users can get some insights about the optimal number of Fourier terms by looking at the final component
+plots. The default <code>seasonality_mode</code> is additive. This means that no heteroscedasticity is expected in the series in terms of the seasonality. 
+However, if the series contains clear variance, where the seasonal fluctuations become larger proportional to the trend, the <code>seasonality_mode</code>
+can be set to multiplicative.</p>
+<h2 id="regularization-related-parameters">Regularization Related Parameters</h2>
+<p>NeuralProphet also contains a number of regularization parameters to control the model coefficients and introduce sparsity into the model. This also
+helps avoid overfitting of the model to the training data. For <code>seasonality_reg</code>, small values in the range 0.1-1 allow to fit large seasonal 
+fluctuations whereas large values in the range 1-100 impose a heavier penalty on the Fourier coefficients and thus dampens the seasonality. 
+For <code>ar_sparsity</code> values in the range 0-1 are expected with 0 inducing complete sparsity and 1 imposing no regularization at all. <code>ar_sparsity</code> along with
+ <code>n_lags</code> can be used for data exploration and feature selection. You can use a larger number of lags thanks to the scalability of AR-Net and use the scarcity 
+ to identify important influence of past time steps on the prediction accuracy. For <code>future_regressor_regularization</code>, <code>event_regularization</code> and <code>country_holiday_regularization</code>, values can be set in between 0-1 in the same notion
+as in <code>ar_sparsity</code>. You can set different regularization parameters for the individual regressors and events depending on which ones need to be more
+dampened.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../contribute/" class="btn btn-neutral float-right" title="Contribute">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../model/future-regressors/" class="btn btn-neutral" title="Future Regressors"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../model/future-regressors/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../contribute/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

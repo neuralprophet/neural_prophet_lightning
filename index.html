@@ -49,6 +49,10 @@
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <p class="caption"><span class="caption-text">NeuralProphet</span></p>
                 <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="model-overview/">Model Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="changes-from-prophet/">Changes from Prophet</a>
+                    </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href=".">Quickstart</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#install">Install</a>
@@ -67,8 +71,6 @@
     </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="model-overview/">Model Overview</a>
-                    </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Model Components</span></p>
                 <ul>
@@ -83,6 +85,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="model/events/">Events</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="model/future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Parameters</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="hyperparameter-selection/">Hyperparameter Selection</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -126,8 +133,7 @@
           <div role="main">
             <div class="section">
               
-                <p>The documentation is a work in progress.</p>
-<h1 id="quick-start-guide">Quick Start Guide</h1>
+                <h1 id="quick-start-guide">Quick Start Guide</h1>
 <p>This page contains details of how you can build a simple model using NeuralProphet with 
 minimal features.</p>
 <h2 id="install">Install</h2>
@@ -179,18 +185,21 @@ df = pd.read_csv('../example_data/example_wp_log_peyton_manning.csv')
 </tr>
 </tbody>
 </table>
+<p><br /></p>
 <h2 id="simple-model">Simple Model</h2>
 <p>A simple model with <code>neural_prophet</code> for this dataset can be fitted by creating
 an object of the <code>NeuralProphet</code> class as follows and calling the fit function. This 
-fits a model with the default settings in the model.</p>
+fits a model with the default settings in the model. For more details on these default settings, refer to
+the Section on <a href="hyperparameter-selection/">Hyperparameter Selction</a>.</p>
 <pre><code class="language-python">m = NeuralProphet()
-metrics = m.fit(df)
+metrics = m.fit(df, freq=&quot;D&quot;)
 </code></pre>
 <p>Once the model is fitted, we can make forecasts using the fitted model. For this, we first
 need to create a future dataframe consisting of the time steps into the future that we need
 to forecast for. <code>NeuralProphet</code> provides the helper function <code>make_future_dataframe</code> for
-this purpose.</p>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365)
+this purpose. Note that the the frequency of data is set globally here. 
+Valid timeseries frequency settings are <a href="https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases">pandas timeseries offset aliases</a>.</p>
+<pre><code class="language-python">future = m.make_future_dataframe(df, periods=365)
 forecast = m.predict(future)
 </code></pre>
 <h2 id="plotting">Plotting</h2>
@@ -198,13 +207,13 @@ forecast = m.predict(future)
 <pre><code class="language-python">forecasts_plot = m.plot(forecast)
 </code></pre>
 <p><img alt="plot-forecasts-1" src="images/plot_forecasts_simple_1.png" style="height:350px" /></p>
-<p>This is a simple model with a trend and a weekly seasonality and a yearly seasonality. You can also look at the individual components
-separately. </p>
-<pre><code class="language-python">fig_comp = m.plot_components()
+<p>This is a simple model with a trend, a weekly seasonality and a yearly seasonality estimated by default. 
+You can also look at the individual components separately as below. </p>
+<pre><code class="language-python">fig_comp = m.plot_components(forecast)
 </code></pre>
 <p><img alt="plot-comp-1" src="images/plot_comp_simple_1.png" style="height:500px" /></p>
 <p>The individual coefficient values can also be plotted as below to gain further insights.</p>
-<pre><code class="language-python">fig_param = m.plot_components()
+<pre><code class="language-python">fig_param = m.plot_parameters()
 </code></pre>
 <p><img alt="plot-param-1" src="images/plot_param_simple_1.png" style="height:600px" /></p>
 <h2 id="validation">Validation</h2>
@@ -213,19 +222,17 @@ validate after the model fitting like below by specifying the fraction of data t
 in the argument <code>valida_p</code>. This validation set is reserved from the end of the series.</p>
 <pre><code class="language-python">m = NeuralProphet()
 df_train, df_val = m.split_df(df, valid_p=0.2)
-train_metrics = m.fit(df_train)
+</code></pre>
+<p>You can now look at the training and validation metrics separately as below. </p>
+<pre><code class="language-python">train_metrics = m.fit(df_train)
 val_metrics = m.test(df_val)
 </code></pre>
-<p>You can now look at the training and validation metrics separately. You can also perform validation 
-per every epoch during model fitting. This is done as follows by setting the <code>validate_each_epoch</code> argument
-in the <code>fit</code> function call.</p>
+<p>You can also perform validation per every epoch during model fitting. This is done as follows by setting the 
+<code>validate_each_epoch</code> argument in the <code>fit</code> function call. This lets you look at the validation metrics while model training.</p>
 <pre><code class="language-python"># or evaluate while training
 m = NeuralProphet()
 metrics = m.fit(df, validate_each_epoch=True, valid_p=0.2)
 </code></pre>
-<!-- highlight nth step -->
-<!-- plot_last_forecast -->
-<!-- hyperparameter tuning -->
               
             </div>
           </div>
@@ -233,8 +240,10 @@ metrics = m.fit(df, validate_each_epoch=True, valid_p=0.2)
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="model-overview/" class="btn btn-neutral float-right" title="Model Overview">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="model/trend/" class="btn btn-neutral float-right" title="Trend">Next <span class="icon icon-circle-arrow-right"></span></a>
       
+      
+        <a href="changes-from-prophet/" class="btn btn-neutral" title="Changes from Prophet"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -260,8 +269,10 @@ metrics = m.fit(df, validate_each_epoch=True, valid_p=0.2)
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
+        <span><a href="changes-from-prophet/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-        <span style="margin-left: 15px"><a href="model-overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+        <span style="margin-left: 15px"><a href="model/trend/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

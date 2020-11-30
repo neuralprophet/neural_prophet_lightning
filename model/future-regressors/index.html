@@ -49,9 +49,11 @@
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <p class="caption"><span class="caption-text">NeuralProphet</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
-                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../../model-overview/">Model Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../../changes-from-prophet/">Changes from Prophet</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Model Components</span></p>
@@ -75,6 +77,11 @@
     <li class="toctree-l2"><a class="reference internal" href="#regularization-for-future-regressors">Regularization for Future Regressors</a>
     </li>
     </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Parameters</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../hyperparameter-selection/">Hyperparameter Selection</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -177,7 +184,8 @@ df['B'] = df['y'].rolling(30, min_periods=1).mean()
 </tr>
 </tbody>
 </table>
-<p>In order to perform forecasting, we also need to provide the future values of the regressors. </p>
+<p><br />
+In order to perform forecasting, we also need to provide the future values of the regressors. </p>
 <pre><code class="language-python">future_regressors_df = pd.DataFrame(data={'A': df['A'][:50], 'B': df['B'][:50]})
 </code></pre>
 <p>This dataframe looks like below.</p>
@@ -217,6 +225,7 @@ df['B'] = df['y'].rolling(30, min_periods=1).mean()
 </tr>
 </tbody>
 </table>
+<p><br /></p>
 <p>It is a dataframe with only the columns of the future values of the regressors.</p>
 <p>Similar to events, future regressors too can be added in both the additive and multiplicative formats.</p>
 <h2 id="additive-future-regressors">Additive Future Regressors</h2>
@@ -224,31 +233,33 @@ df['B'] = df['y'].rolling(30, min_periods=1).mean()
 the <code>NeuralProphet</code> object by calling the <code>add_future_regressor</code> function. Once this is done, the model can be
 fitted by providing to the <code>fit</code> function, the dataframe of the training data as well as the regressor values.</p>
 <pre><code class="language-python">m = NeuralProphet(
-        n_forecasts=3,
-        n_lags=5,
+        n_forecasts=10,
+        yearly_seasonality=False,
+        weekly_seasonality=False,
+        daily_seasonality=False,
     )
 
 m = m.add_future_regressor(name='A')
 m = m.add_future_regressor(name='B')
 
-metrics = m.fit(df)
+metrics = m.fit(df, freq=&quot;D&quot;)
 </code></pre>
 <p>When forecasting, the future dataframe must be created by providing the future values
 of the regressors. To do that, now you need to call the <code>make_future_dataframe</code> function
 by providing the previously created <code>future_regressors_df</code> as an argument.</p>
-<pre><code class="language-python">future = m.make_future_dataframe(df=df, regressors_df=future_regressors_df, future_periods=3)
+<pre><code class="language-python">future = m.make_future_dataframe(df=df, regressors_df=future_regressors_df, periods=3)
 forecast = m.predict(df=future)
 </code></pre>
-<p>Now you can plot the components the same way and the resulting plot would look something
+<p>Now you can plot the components the same way as before and the resulting plot would look something
 like below.</p>
 <pre><code class="language-python">fig_comp = m.plot_components(forecast)
 </code></pre>
-<p><img alt="plot-comp-1" src="../../images/plot_comp_future_reg_1.png" style="height:850px;width:500px" /></p>
-<p>In addition to the components like seasonality, auto-regression and trend it also shows
-a plot for the additive future regressors. The coefficients of the future regressors can also be plotted.</p>
+<p><img alt="plot-comp-1" src="../../images/plot_comp_future_reg_1.png" style="height:400px" /></p>
+<p>In addition to the trend it also shows a plot for the additive future regressors. 
+The coefficients of the future regressors can also be plotted.</p>
 <pre><code class="language-python">fig_param = m.plot_parameters()
 </code></pre>
-<p><img alt="plot-param-1" src="../../images/plot_param_future_reg_1.png" style="height:850px;width:500px" /></p>
+<p><img alt="plot-param-1" src="../../images/plot_param_future_reg_1.png" style="height:550px" /></p>
 <h2 id="multiplicative-future-regressors">Multiplicative Future Regressors</h2>
 <p>Future regressors can also be added in multiplicative mode. You simply need to set 
 the mode to <code>multiplicative</code> when adding the regressors to the <code>NeuralProphet</code> object.</p>
@@ -257,18 +268,16 @@ m = m.add_future_regressor(name='B')
 </code></pre>
 <p>In the above example, we have both additive and multiplicative regressors, where <code>A</code>
 is multiplicative and <code>B</code> is additive. All the other steps in the fitting and the forecasting
-processes are the same. The components plot looks as below.</p>
-<p><img alt="plot-comp-2" src="../../images/plot_comp_future_reg_2.png" style="height:850px;width:500px" /></p>
-<p>There are two individual plots for the additive and multiplicative regressors, where 
+processes are the same. </p>
+<p><The components plot looks as below. There are two individual plots for the additive and multiplicative regressors, where 
 the multiplicative component is shown as a percentage. In the same manner, the
-coefficients will appear in a plot like below.</p>
-<p><img alt="plot-param-2" src="../../images/plot_param_future_reg_2.png" style="height:850px;width:500px" /></p>
+coefficients will appear in a plot like below.></p>
 <h2 id="regularization-for-future-regressors">Regularization for Future Regressors</h2>
 <p>We can add regularization into the future regressors as below. </p>
 <pre><code class="language-python">m = m.add_future_regressor(name='A', regularization=0.05)
 m = m.add_future_regressor(name='B', regularization=0.02)
 </code></pre>
-<p>This will add sparsity into the individual regressor coefficients.</p>
+<p>This will add sparsity into the individual regressor coefficients.  </p>
               
             </div>
           </div>
@@ -276,7 +285,7 @@ m = m.add_future_regressor(name='B', regularization=0.02)
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../../contribute/" class="btn btn-neutral float-right" title="Contribute">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../../hyperparameter-selection/" class="btn btn-neutral float-right" title="Hyperparameter Selection">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../events/" class="btn btn-neutral" title="Events"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -308,7 +317,7 @@ m = m.add_future_regressor(name='B', regularization=0.02)
         <span><a href="../events/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../../contribute/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../../hyperparameter-selection/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

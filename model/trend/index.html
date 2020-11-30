@@ -49,9 +49,11 @@
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <p class="caption"><span class="caption-text">NeuralProphet</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
-                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../../model-overview/">Model Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../../changes-from-prophet/">Changes from Prophet</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Model Components</span></p>
@@ -69,6 +71,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="../events/">Events</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Parameters</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../hyperparameter-selection/">Hyperparameter Selection</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -121,10 +128,10 @@
     weekly_seasonality=False,
     daily_seasonality=False,
 )
-metrics = m.fit(df)
+metrics = m.fit(df, freq=&quot;D&quot;)
 
 </code></pre>
-<pre><code class="language-python">future = m.make_future_dataframe(df, future_periods=365, n_historic_predictions=len(df))
+<pre><code class="language-python">future = m.make_future_dataframe(df, periods=365, n_historic_predictions=len(df))
 forecast = m.predict(future)
 </code></pre>
 <p>The components plot looks like below with only trend and residuals as a components.</p>
@@ -141,7 +148,7 @@ forecast = m.predict(future)
         <a href="../seasonality/" class="btn btn-neutral float-right" title="Seasonality">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../../model-overview/" class="btn btn-neutral" title="Model Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../.." class="btn btn-neutral" title="Quickstart"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -167,7 +174,7 @@ forecast = m.predict(future)
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../../model-overview/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../.." style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
         <span style="margin-left: 15px"><a href="../seasonality/" style="color: #fcfcfc">Next &raquo;</a></span>

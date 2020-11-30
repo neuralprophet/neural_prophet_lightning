@@ -49,9 +49,11 @@
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <p class="caption"><span class="caption-text">NeuralProphet</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
-                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../../model-overview/">Model Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../../changes-from-prophet/">Changes from Prophet</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Model Components</span></p>
@@ -77,6 +79,11 @@
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Parameters</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../hyperparameter-selection/">Hyperparameter Selection</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -124,8 +131,8 @@
 <p>Often in forecasting problems, we need to consider recurring special events. These are supported
 by <code>neural_prophet</code>. These events can be added both in additive format and multiplicative format.</p>
 <p>To provide the information of events into the model, the user has to create a dataframe which has the 
-column <code>ds</code> corresponding to the event dates and the column <code>event</code> whcih contains
-the names of the events on a specified dates. In the following example we have created the
+column <code>ds</code> corresponding to the event dates and the column <code>event</code> which contains
+the names of the events on specified dates. In the following example we have created the
 dataframe named <code>history_events_df</code> which contains these events information.</p>
 <pre><code class="language-python">playoffs_history = pd.DataFrame({
         'event': 'playoff',
@@ -183,7 +190,8 @@ history_events_df = pd.concat((playoffs_history, superbowls_history))
 </tr>
 </tbody>
 </table>
-<p>For forecasting, we also need to provide the future dates of these events used to
+<p><br />
+For forecasting, we also need to provide the future dates of these events used to
 train the model. You can either include these in the same events dataframe
 that was created before for fitting the model, or in a new dataframe as follows. </p>
 <pre><code class="language-python">playoffs_future = pd.DataFrame({
@@ -262,153 +270,23 @@ original time series dataframe along with the created <code>history_events_df</c
 </tr>
 </tbody>
 </table>
-<p>After that, we can simply fit the model as below.</p>
-<pre><code class="language-python">metrics = m.fit(history_df)
+<p><br /></p>
+<p>After that, we can simply fit the model as below by providing to the <code>fit</code> function, the created <code>history_df</code>.</p>
+<pre><code class="language-python">metrics = m.fit(history_df, freq=&quot;D&quot;)
 </code></pre>
 <p>To do forecasting with the fitted model, we first need to create the future dataframe with events
 information. This can be done with the <code>make_future_dataframe</code> function by passing in the created
 <code>future_events_df</code> and specifying the desired size of the forecast horizon.</p>
-<pre><code class="language-python">future = m.make_future_dataframe(df=history_df, events_df=future_events_df, future_periods=10)
+<pre><code class="language-python">future = m.make_future_dataframe(df=history_df, events_df=future_events_df, periods=10)
 forecast = m.predict(df=future)
 </code></pre>
-<p>The produced forecasts look like below. The 10 step-ahead forecasts are available in the <code>yhat1</code> column.
-The components from the individual events are available in the <code>event_playoff</code> and <code>event_superbowl</code> columns and 
-their agrgegated effect is shown on the <code>events_additive</code> column.</p>
-<table>
-<thead>
-<tr>
-<th align="right"></th>
-<th align="left">ds</th>
-<th align="left">y</th>
-<th align="right">yhat1</th>
-<th align="right">residual1</th>
-<th align="right">trend</th>
-<th align="right">events_additive</th>
-<th align="right">event_playoff</th>
-<th align="right">event_superbowl</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="right">0</td>
-<td align="left">2016-01-21 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.34693</td>
-<td align="right">nan</td>
-<td align="right">-0.583201</td>
-<td align="right">-0.208826</td>
-<td align="right">-0.208826</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">1</td>
-<td align="left">2016-01-22 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55506</td>
-<td align="right">nan</td>
-<td align="right">-0.5839</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">2</td>
-<td align="left">2016-01-23 00:00:00</td>
-<td align="left"></td>
-<td align="right">6.95665</td>
-<td align="right">nan</td>
-<td align="right">-0.584599</td>
-<td align="right">-0.597706</td>
-<td align="right">0</td>
-<td align="right">-0.597706</td>
-</tr>
-<tr>
-<td align="right">3</td>
-<td align="left">2016-01-24 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55366</td>
-<td align="right">nan</td>
-<td align="right">-0.585297</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">4</td>
-<td align="left">2016-01-25 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55296</td>
-<td align="right">nan</td>
-<td align="right">-0.585997</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">5</td>
-<td align="left">2016-01-26 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55226</td>
-<td align="right">nan</td>
-<td align="right">-0.586695</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">6</td>
-<td align="left">2016-01-27 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55156</td>
-<td align="right">nan</td>
-<td align="right">-0.587394</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">7</td>
-<td align="left">2016-01-28 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55087</td>
-<td align="right">nan</td>
-<td align="right">-0.588093</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">8</td>
-<td align="left">2016-01-29 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.55017</td>
-<td align="right">nan</td>
-<td align="right">-0.588792</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr>
-<td align="right">9</td>
-<td align="left">2016-01-30 00:00:00</td>
-<td align="left"></td>
-<td align="right">7.54947</td>
-<td align="right">nan</td>
-<td align="right">-0.58949</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-</tbody>
-</table>
-<p>The different components can be plotted like below. All events are plotted as one component,
-the <code>Additive Events</code></p>
-<pre><code class="language-python">fig_comp = m.plot_components(forecast)
-</code></pre>
+<p><The produced forecasts look like below. The 10 step-ahead forecasts are available in the yhat1 column.
+The components from the individual events are available in the event_playoff and event_superbowl columns and 
+their agrgegated effect is shown on the events_additive column></p>
+<p>Once the forecasting is done, the different components can be plotted like below. All events are plotted as one 
+component, the <code>Additive Events</code></p>
 <p><img alt="plot-comp-1" src="../../images/plot_comp_events_1.png" style="height:400px" /></p>
-<p>If you want to have a look at the coefficients of the events, the <code>plot_parameters</code> function is helpful.</p>
-<pre><code class="language-python">fig_param = m.plot_parameters()
-</code></pre>
+<p>The model coefficients would look like below.   </p>
 <p><img alt="plot-param-1" src="../../images/plot_param_events_1.png" style="height:550px" /></p>
 <h2 id="multiplicative-events">Multiplicative Events</h2>
 <p>The default mode for events in <code>neural_prophet</code> is additive. However, events can also be modelled
@@ -419,8 +297,6 @@ we need to set the <code>mode</code> to <code>multiplicative</code> as below.</p
 <p>All the other steps are the same as for the <code>additive</code> mode. Now, when you plot the components,
 the event components will appear as percentages.</p>
 <p><img alt="plot-comp-2" src="../../images/plot_comp_events_2.png" style="height:400px" /></p>
-<p>In the same manner, the coefficients too, will now appear as percentages when plotted.</p>
-<p><img alt="plot-param-2" src="../../images/plot_param_events_2.png" style="height:550px" /></p>
 <h2 id="event-windows">Event Windows</h2>
 <p>You can also provide windows for events. This way, you can consider the days around a 
 particular event also as special events by providing the arguments <code>lower_window</code> and 
@@ -442,7 +318,7 @@ m = m.add_events(&quot;playoff&quot;, upper_window=2)
 are considered as three different special events.</p>
 <h2 id="country-specific-holidays">Country Specific Holidays</h2>
 <p>Apart from the user specified events, <code>neural_prophet</code> also supports standard country specific holidays.
-If you want to add the holidays for a particualr country, you simply have to call the <code>add_country_holidays</code>
+If you want to add the holidays for a particular country, you simply have to call the <code>add_country_holidays</code>
 function on the <code>NeuralProphet</code> object and specify the country. Similar to the user specified events,
 country specific holidays can either be <code>additive</code> or <code>multiplicative</code> and include windows. However,
 unlike for user specified events, the windows will be the same for all the country specific events. </p>

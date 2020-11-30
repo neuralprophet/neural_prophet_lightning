@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Contribute - NeuralProphet</title>
+  <title>Changes from Prophet - NeuralProphet</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Contribute";
-    var mkdocs_page_input_path = "contribute.md";
+    var mkdocs_page_name = "Changes from Prophet";
+    var mkdocs_page_input_path = "changes-from-prophet.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -48,10 +48,12 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <p class="caption"><span class="caption-text">NeuralProphet</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../model-overview/">Model Overview</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../changes-from-prophet/">Changes from Prophet</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Changes from Prophet</a>
+    <ul class="current">
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="..">Quickstart</a>
                     </li>
@@ -77,14 +79,8 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
-                <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Contribute</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#dev-install">Dev Install</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#notes">Notes</a>
-    </li>
-    </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../contribute/">Contribute</a>
                     </li>
                 </ul>
       </div>
@@ -108,11 +104,11 @@
     
       
         
-          <li>About &raquo;</li>
+          <li>NeuralProphet &raquo;</li>
         
       
     
-    <li>Contribute</li>
+    <li>Changes from Prophet</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -123,15 +119,21 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="contribute">Contribute</h1>
-<h2 id="dev-install">Dev Install</h2>
-<p>After downloading the code repository (via <code>git clone</code>), change to the repository directory (<code>cd neural_prophet</code>), activate your virtual environment, and install neuralprophet as python package with
-<code>pip install -e .[dev]</code></p>
-<p>(Including the optional <code>-e</code> flag will install neuralprophet in "editable" mode, meaning that instead of copying the files into your virtual environment, a symlink will be created to the files where they are.)</p>
-<p>Additionally you must run <code>$ neuralprophet_dev_setup</code> in your console to run the dev-setup script which installs appropriate git hooks for testing etc.</p>
-<h2 id="notes">Notes</h2>
-<p>As far as possible, we follow the <a href="http://google.github.io/styleguide/pyguide.html">Google Python Style Guide</a></p>
-<p>As for Git practices, please follow the steps described at <a href="https://github.com/ourownstory/swiss-cheese/blob/master/git_best_practices.md">Swiss Cheese</a> for how to git-rebase-squash when working on a forked repo.</p>
+                <h1 id="what-has-changed-from-prophet">What has Changed from Prophet</h1>
+<p>NeuralProphet has a number of added features with respect to original Prophet.
+They are as follows.</p>
+<ul>
+<li>Gradient Descent for optimisation via using PyTorch as the backend.</li>
+<li>Modelling autocorrelation of time series using AR-Net</li>
+<li>Modelling lagged regressors using a sepearate Feed-Forward Neural Network.</li>
+<li>Configurable non-linear deep layers of the FFNNs.</li>
+<li>Tuneable to specific forecast horizons (greater than 1).</li>
+<li>Custom losses and metrics.</li>
+</ul>
+<p>Due to the modularity of the code and the extensibility supported by PyTorch,
+any component trainable by gradient descent can be added as a module
+to NeuralProphet. Using PyTorch as the backend, makes the modelling process
+much faster compared to original Prophet which uses Stan as the backend.</p>
               
             </div>
           </div>
@@ -139,8 +141,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href=".." class="btn btn-neutral float-right" title="Quickstart">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-        <a href="../hyperparameter-selection/" class="btn btn-neutral" title="Hyperparameter Selection"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+        <a href="../model-overview/" class="btn btn-neutral" title="Model Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -166,8 +170,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../hyperparameter-selection/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../model-overview/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
+      
+        <span style="margin-left: 15px"><a href=".." style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

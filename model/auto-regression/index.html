@@ -49,9 +49,11 @@
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <p class="caption"><span class="caption-text">NeuralProphet</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
-                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../../model-overview/">Model Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../../changes-from-prophet/">Changes from Prophet</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Quickstart</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Model Components</span></p>
@@ -62,6 +64,10 @@
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Auto-Regression</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#regularize-ar-net">Regularize AR-Net</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#highlight-specific-forecast-step">Highlight Specific Forecast Step</a>
+    </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../lagged-regressors/">Lagged Regressors</a>
@@ -69,6 +75,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="../events/">Events</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../future-regressors/">Future Regressors</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Model Parameters</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../hyperparameter-selection/">Hyperparameter Selection</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -134,7 +145,8 @@ of <code>n_forecasts</code>, it cannot support any other value during testing.</
 <p>You can now see auto-regression as a separate component. The corresponding coefficients look like
 below.</p>
 <p><img alt="plot-param-1" src="../../images/plot_param_ar_1.png" style="height:600px" /></p>
-<p>You can see the relevance of each of the lags when modelling the autocorrelation. You can also specify the <code>num_hidden_layers</code> for the AR-Net.</p>
+<p>You can see the relevance of each of the lags when modelling the autocorrelation. You can also specify the <code>num_hidden_layers</code> 
+for the AR-Net, in order to increase the complexity of the AR-Net.</p>
 <pre><code class="language-python">m = NeuralProphet(
     n_forecasts=3,
     n_lags=5,
@@ -144,8 +156,10 @@ below.</p>
     daily_seasonality=False
 )
 </code></pre>
+<h2 id="regularize-ar-net">Regularize AR-Net</h2>
 <p>Regularization in AR-Net is done by setting the <code>ar_sparsity</code> parameter in the <code>NeuralProphet</code> object
-like below. <code>ar_sparsity</code> should take a value in between 0-1. </p>
+like below. For more details on setting a value for <code>ar_sparsity</code>, refer to the Section on 
+<a href="../../hyperparameter-selection/#regularization-related-parameters">Hyperparameter Selection</a>. </p>
 <pre><code class="language-python">m = NeuralProphet(
     n_forecasts=3,
     n_lags=5,
@@ -156,6 +170,72 @@ like below. <code>ar_sparsity</code> should take a value in between 0-1. </p>
     daily_seasonality=False
 )
 </code></pre>
+<h2 id="highlight-specific-forecast-step">Highlight Specific Forecast Step</h2>
+<p>When modelling the autocorrelation, the model in the multi-input, multi-output mode. In this mode, you can highlight the nth step
+ahead forecast. This means that, you can specifically look at the forecast at the nth step when calculating errors during model training
+as well as when forecast plotting. This can be done like below.</p>
+<pre><code class="language-python">m = NeuralProphet(
+    n_forecasts=30,
+    n_lags=60,
+    yearly_seasonality=False,
+    weekly_seasonality=False,
+    daily_seasonality=False
+)
+m.highlight_nth_step_ahead_of_each_forecast(step_number=m.n_forecasts)
+</code></pre>
+<p>You can specify any value less than or equal to <code>n_forecasts</code> to the <code>step_number</code> parameter.
+Once you do this, the metrics would look like below.</p>
+<table>
+<thead>
+<tr>
+<th align="left">SmoothL1Loss</th>
+<th align="center">MAE</th>
+<th align="center">SmoothL1Loss-3</th>
+<th align="center">MAE-3</th>
+<th align="right">RegLoss</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">0.272427</td>
+<td align="center">3.063127</td>
+<td align="center">0.164296</td>
+<td align="center">2.407697</td>
+<td align="right">0.0</td>
+</tr>
+<tr>
+<td align="left">0.151259</td>
+<td align="center">2.303768</td>
+<td align="center">0.144811</td>
+<td align="center">2.261525</td>
+<td align="right">0.0</td>
+</tr>
+<tr>
+<td align="left">0.129990</td>
+<td align="center">2.140769</td>
+<td align="center">0.127703</td>
+<td align="center">2.126293</td>
+<td align="right">0.0</td>
+</tr>
+<tr>
+<td align="left">0.116178</td>
+<td align="center">2.020397</td>
+<td align="center">0.113719</td>
+<td align="center">2.005068</td>
+<td align="right">0.0</td>
+</tr>
+<tr>
+<td align="left">0.104502</td>
+<td align="center">1.915078</td>
+<td align="center">0.101155</td>
+<td align="center">1.887193</td>
+<td align="right">0.0</td>
+</tr>
+</tbody>
+</table>
+<p><br /></p>
+<p>In the forecast plots, it will focus only on the nth step ahead forecast. This is shown below for the fir of the model. </p>
+<p><img alt="plot-forecast-1" src="../../images/plot_forecast_ar_1.png" style="height:400px" /></p>
               
             </div>
           </div>
