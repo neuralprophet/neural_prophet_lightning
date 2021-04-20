@@ -26,8 +26,16 @@ For hyperparameter tuning we will add a module using Ray Tune functional.
 
 Additionally, we will add LIBRA framework functional for benchmarking. 
 This will allow future users to add datasets and compare results.
-## Distribution of roles and roadmap
 
+## Distribution of roles and roadmap
+We distributed our main tasks and goals evenly, as described on the roadmap below. 
+Both of us will work on refactoring into PyTorch Lightning.
+Alexey will focus on the main TimeNet model class, while Polina will work on the forecaster code.
+We also distributed models we aim to add.
+Polina will work on N-Beats and LSTM, while Alexey will work on Temporal Fusion Transformers and DeepAR.
+We will write corresponding tests and documentation of implemented modules.
+Further, Polina will focus on hyperparameter tuning addition, while Alexey will implement LIBRA framework in python.
+Afterwards, we will both work on the benchmarking using LIBRA framework and finalization of the project.
 
 <img src="roadmap.png" alt="roadmap"  width="600"/>
 
