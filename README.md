@@ -22,9 +22,10 @@ They are already built in PyTorch Lightning.
 We will add data preprocessing steps for these models.
 Additionally, we will add wrappers so that these models will rely on the same API and produce results in the same format as NeuralProphet.
 
-For hyperparameter tuning we will add a module using Ray Tune functional.
+For hyperparameter tuning we will introduce a new module using Ray Tune functional.
 
 Additionally, we will add LIBRA framework functional for benchmarking. 
+Currently, this framework is available only in R, so we will implement it in python and include in NeuralProphet.
 This will allow future users to add datasets and compare results.
 
 ## Distribution of roles and roadmap
