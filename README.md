@@ -29,4 +29,4 @@ This will allow future users to add datasets and compare results.
 ## Distribution of roles and roadmap
 
 ![PT to PL](roadmap.png)
-<img src="roadmap.png" alt="roadmap" align="center" width="400"/>
+<img src="roadmap.png" alt="roadmap" align="center" width="600"/>
