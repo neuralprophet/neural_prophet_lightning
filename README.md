@@ -26,4 +26,4 @@ For hyperparameter tuning we will add a module using Ray Tune functional.
 
 ## Distribution of roles and roadmap
 
-![PT to PL](roadmap.pdf)
+![PT to PL](roadmap.svg)
