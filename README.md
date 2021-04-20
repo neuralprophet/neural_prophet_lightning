@@ -28,4 +28,4 @@ Additionally, we will add LIBRA framework functional for benchmarking.
 This will allow future users to add datasets and compare results.
 ## Distribution of roles and roadmap
 
-![PT to PL](roadmap.png)
+![PT to PL](roadmap.png=250x)
