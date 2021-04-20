@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1103px" height="675px" viewBox="0 0 1103 675" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>roadmap</title>
+    <g id="roadmap" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle" fill="#FFFFFF" x="0" y="0" width="1103" height="675"></rect>
+        <g id="Group-2" transform="translate(253.000000, 48.000000)" stroke="#979797" stroke-linecap="square">
+            <line x1="0.5" y1="16.5" x2="0.5" y2="623.5" id="Line-2"></line>
+            <line x1="250.5" y1="14.5" x2="250.5" y2="623.5" id="Line-2"></line>
+            <line x1="503.5" y1="14.5" x2="503.5" y2="623.5" id="Line-2"></line>
+        </g>
+        <rect id="Rectangle" stroke="#979797" stroke-width="2" fill="#F6F6F6" x="23" y="106" width="595" height="56" rx="3"></rect>
+        <text id="Refactoring-with-PyT" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="42" y="147">Refactoring with PyTorch Lightning</tspan>
+        </text>
+        <rect id="Rectangle" stroke="#979797" stroke-width="2" fill="#F6F6F6" x="116" y="177" width="555" height="220" rx="8"></rect>
+        <g id="Group" transform="translate(123.000000, 182.000000)">
+            <text id="Add-new-models-in-th" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+                <tspan x="0" y="32">Add new models in the same API</tspan>
+                <tspan x="0" y="72">	NBeats</tspan>
+                <tspan x="0" y="112">	TemporalFusionTransformers</tspan>
+                <tspan x="0" y="152">	DeepAR</tspan>
+                <tspan x="0" y="192">	LSTM</tspan>
+            </text>
+            <circle id="Oval" fill="#CD0000" cx="9.5" cy="62.5" r="8.5"></circle>
+            <circle id="Oval" fill="#CD0000" cx="9.5" cy="178.5" r="8.5"></circle>
+            <circle id="Oval" fill="#14B200" cx="9.5" cy="139.5" r="8.5"></circle>
+            <circle id="Oval" fill="#14B200" cx="9.5" cy="101.5" r="8.5"></circle>
+        </g>
+        <rect id="Rectangle" stroke="#979797" stroke-width="2" fill="#F6F6F6" x="254" y="412" width="455" height="58" rx="3"></rect>
+        <text id="Add-hyperparameter-t" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="267" y="453">Add hyperparameter tuning</tspan>
+        </text>
+        <circle id="Oval" fill="#CD0000" cx="55.5" cy="106.5" r="8.5"></circle>
+        <circle id="Oval" fill="#CD0000" cx="277.5" cy="413.5" r="8.5"></circle>
+        <circle id="Oval" fill="#14B200" cx="38.5" cy="106.5" r="8.5"></circle>
+        <rect id="Rectangle" stroke="#979797" stroke-width="2" fill="#F6F6F6" x="23" y="486" width="868" height="56" rx="3"></rect>
+        <circle id="Oval" fill="#CD0000" cx="36.5" cy="486.5" r="8.5"></circle>
+        <circle id="Oval" fill="#14B200" cx="55.5" cy="486.5" r="8.5"></circle>
+        <text id="Add-tests-and-docume" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="37" y="527">Add tests and documentation</tspan>
+        </text>
+        <rect id="Rectangle" stroke="#979797" stroke-width="2" fill="#F6F6F6" x="534" y="562" width="555" height="102" rx="3"></rect>
+        <circle id="Oval" fill="#CD0000" cx="547.5" cy="562.5" r="8.5"></circle>
+        <circle id="Oval" fill="#14B200" cx="566.5" cy="562.5" r="8.5"></circle>
+        <text id="Implement-LIBRA-fram" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="548" y="603">Implement LIBRA framework and </tspan>
+            <tspan x="548" y="643">benchmarking</tspan>
+        </text>
+        <circle id="Oval" fill="#CD0000" cx="949.5" cy="119.5" r="8.5"></circle>
+        <text id="Polina" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="983" y="131">Polina</tspan>
+        </text>
+        <circle id="Oval" fill="#14B200" cx="949.5" cy="162.5" r="8.5"></circle>
+        <text id="Alexey" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="983" y="174">Alexey</tspan>
+        </text>
+        <line x1="-0.5" y1="78.5" x2="1025.5" y2="78.5" id="Line" stroke="#979797" stroke-linecap="square"></line>
+        <text id="Weeks" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="461" y="32">Weeks</tspan>
+        </text>
+        <text id="1" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="114" y="64">1</tspan>
+        </text>
+        <text id="2" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="371" y="64">2</tspan>
+        </text>
+        <text id="3" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="624" y="64">3</tspan>
+        </text>
+        <text id="4" font-family="Helvetica-Bold, Helvetica" font-size="33" font-weight="bold" fill="#000000">
+            <tspan x="886" y="64">4</tspan>
+        </text>
+    </g>
+</svg>
