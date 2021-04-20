@@ -1,20 +1,16 @@
+#NeuralProphet project for Theoretical Foundations of DataScience course
 
-This project aims to contribute to the open-source library NeuralProphet by adding state-of-the-art models and refactoring the code to adopt the best machine learning engineering practices. 
+---
+This is the repository for NeuralProphet project for Theoretical Foundations of DataScience course. Contributors are Alexey Voskoboinikov and Polina Pilyugina.The main aim of this project is to improve NeuralProphet Library.
+
+### Project outline
+- Refactor the main model class from NeuralProphet with PyTorch Lightning
+- Refactor the rest of the code to support PyTorch Lightning in accordance with existing API
+- Adapt and include existing implementations of state-of-the-art models for time series forecasting under the NeuralProphet API
+- Add hyperparameter tuning with Ray Tune as additional module to NeuralProphet
+- Recreate LIBRA framework for benchmarking in Python and run it on NeuralProphet and our additionally included models
+- Add neccessary tests and documentation for introduced functional
+
+### Baseline solutions
 
 
-
-keywords: Time series forecasting\and Neural Prophet \and Neural forecasting
-
-
-% Why NeuralProphet is impotent
-NeuralProphet is a new library for time series forecasting built on PyTorch.
-It is inspired by widely known Facebook library for time series forecasting called Prophet (\cite{Taylor2018}) and DeepAR model (\cite{Salinas2020}).
-However, while Prophet is additive model focused mostly on seasonal components and holiday effects, NeuralProphet includes AutoRegression components. 
-Moreover, NeuralProphet is built on PyTorch, which allows to configure the model more precisely.
-% Why should we change it
-In this project we aim to improve existing NeuralProphet library to allow even more possibilities for its users.
-Currently, NeuralProphet is written on pure PyTorch.
-However, there is a framework called PyTorch Lighting which allows more possibilities for research purposes.
-Moreover, NeuralProphet API is rather specific in terms of initial data format and outputs.
-This means that for comparison with other models, users are required to write a lot of additional code. 
-Therefore it will be exceptionally useful to add some of state-of-the-art models into NeuralProphet library, which will allow users to use them with the same API.
