@@ -24,6 +24,8 @@ Additionally, we will add wrappers so that these models rely on the same API and
 
 For hyperparameter tuning we will add a module using Ray Tune functional.
 
+Additionally, we will add LIBRA framework functional for benchmarking. 
+This will allow future users to add datasets and compare results.
 ## Distribution of roles and roadmap
 
 ![PT to PL](roadmap.png)
