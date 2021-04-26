@@ -483,13 +483,12 @@ class TimeNet(pl.LightningModule):
         out = trend + additive_components + trend.detach() * multiplicative_components
         return out
 
-
-###############
+    ###############
     def set_optimizer(self, optimizer):
-        self.optimizer = optimizer ##### todo add this to init
+        self.optimizer = optimizer  ##### todo add this to init
 
     def set_loss_func(self, loss_func):
-        self.loss_func = loss_func ##### todo add this to init
+        self.loss_func = loss_func  ##### todo add this to init
 
     def set_forecaster(self, self_forecaster):
         self.forecaster = self_forecaster
@@ -498,15 +497,18 @@ class TimeNet(pl.LightningModule):
         x, y = batch
         y_hat = self.model(x)
         loss = self.loss_func(y_hat, y)
-        loss, reg_loss = self.forecaster._add_batch_regualarizations(loss, e, i / float(len(loader)))
+        ##### less costyl
+        e = self.current_epoch()
+
+        loss, reg_loss = self.forecaster._add_batch_regualarizations(
+            loss, e, batch_idx / float(self.forecaster.loader_size)
+        )
         return loss
 
     def configure_optimizers(self):
         return self.optimizer
 
-###############
-
-
+    ###############
 
     def compute_components(self, inputs):
         """This method returns the values of each model component.

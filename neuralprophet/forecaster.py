@@ -412,6 +412,8 @@ class NeuralProphet:
         self.config_train.apply_train_speed(batch=True, epoch=True)
         dataset = self._create_dataset(df, predict_mode=False)  # needs to be called after set_auto_seasonalities
         loader = DataLoader(dataset, batch_size=self.config_train.batch_size, shuffle=True)
+        self.loader_size = len(loader)
+
         if not self.fitted:
             self.model = self._init_model()  # needs to be called after set_auto_seasonalities
         if self.config_train.learning_rate is None:
@@ -424,6 +426,7 @@ class NeuralProphet:
             )
         self.config_train.apply_train_speed(lr=True)
         self.optimizer = self.config_train.get_optimizer(self.model.parameters())
+        ######
         self.model.set_optimizer(self.optimizer)
         self.scheduler = self.config_train.get_scheduler(self.optimizer, steps_per_epoch=len(loader))
         return loader
