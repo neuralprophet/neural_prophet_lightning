@@ -78,6 +78,9 @@ class TimeNet(pl.LightningModule):
         # Bias
         self.bias = new_param(dims=[1])
 
+        # Metrics live
+        self.metrics_live = {}
+
         # Trend
         self.config_trend = config_trend
         if self.config_trend.growth in ["linear", "discontinuous"]:
@@ -487,6 +490,9 @@ class TimeNet(pl.LightningModule):
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer  ##### todo add this to init
 
+    def set_scheduler(self, scheduler):
+        self.scheduler = scheduler  ##### todo add this to init
+
     def set_loss_func(self, loss_func):
         self.loss_func = loss_func  ##### todo add this to init
 
@@ -495,18 +501,41 @@ class TimeNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self.model(x)
+        y_hat = self(x)
         loss = self.loss_func(y_hat, y)
         ##### less costyl
-        e = self.current_epoch()
+        e = self.current_epoch
 
         loss, reg_loss = self.forecaster._add_batch_regualarizations(
             loss, e, batch_idx / float(self.forecaster.loader_size)
         )
-        return loss
+        self.forecaster.metrics.update(predicted = y_hat.detach(),
+                                       target = y.detach(),
+                                       values = {"Loss": loss, "RegLoss": reg_loss})
+        # predicted = predicted.detach(), target = targets.detach(), values = {"Loss": loss, "RegLoss": reg_loss}
+
+        return loss, reg_loss
+
+    def training_step_end(self, *args, **kwargs):
+        epoch_metrics = self.forecaster.metrics.compute(save=True)
+        self.metrics_live["{}".format(list(epoch_metrics)[0])] = epoch_metrics[list(epoch_metrics)[0]]
+
 
     def configure_optimizers(self):
-        return self.optimizer
+        return [self.optimizer], [self.scheduler]
+
+    # идеально добавить вот эту штуку просто вместо говна
+    # def get_scheduler(self, optimizer, steps_per_epoch):
+    #     return torch.optim.lr_scheduler.OneCycleLR(
+    #         optimizer,
+    #         max_lr=self.learning_rate,
+    #         epochs=self.epochs,
+    #         steps_per_epoch=steps_per_epoch,
+    #         pct_start=0.3333,
+    #         anneal_strategy="cos",
+    #         div_factor=100.0,
+    #         final_div_factor=4000.0,
+    #     )
 
     ###############
 
