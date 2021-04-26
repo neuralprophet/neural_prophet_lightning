@@ -2,6 +2,7 @@ from collections import OrderedDict
 import numpy as np
 import torch
 import torch.nn as nn
+import pytorch_lightning as pl
 import logging
 from neuralprophet.utils import (
     season_config_to_model_dims,
@@ -27,7 +28,7 @@ def new_param(dims):
         return nn.Parameter(torch.nn.init.xavier_normal_(torch.randn([1] + dims)).squeeze(0), requires_grad=True)
 
 
-class TimeNet(nn.Module):
+class TimeNet(pl.LightningModule):
     """Linear time regression fun and some not so linear fun.
 
     A modular model that models classic time-series components
@@ -481,6 +482,31 @@ class TimeNet(nn.Module):
         trend = self.trend(t=inputs["time"])
         out = trend + additive_components + trend.detach() * multiplicative_components
         return out
+
+
+###############
+    def set_optimizer(self, optimizer):
+        self.optimizer = optimizer ##### todo add this to init
+
+    def set_loss_func(self, loss_func):
+        self.loss_func = loss_func ##### todo add this to init
+
+    def set_forecaster(self, self_forecaster):
+        self.forecaster = self_forecaster
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self.model(x)
+        loss = self.loss_func(y_hat, y)
+        loss, reg_loss = self.forecaster._add_batch_regualarizations(loss, e, i / float(len(loader)))
+        return loss
+
+    def configure_optimizers(self):
+        return self.optimizer
+
+###############
+
+
 
     def compute_components(self, inputs):
         """This method returns the values of each model component.

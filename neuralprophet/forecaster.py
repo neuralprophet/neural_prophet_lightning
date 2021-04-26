@@ -147,6 +147,7 @@ class NeuralProphet:
         # Training
         self.config_train = configure.from_kwargs(configure.Train, kwargs)
 
+
         self.metrics = metrics.MetricsCollection(
             metrics=[
                 metrics.LossMetric(self.config_train.loss_func),
@@ -227,6 +228,9 @@ class NeuralProphet:
             num_hidden_layers=self.config_model.num_hidden_layers,
             d_hidden=self.config_model.d_hidden,
         )
+        self.model.set_loss_func(self.config_train.loss_func)
+        self.model.set_forecaster(self)
+
         log.debug(self.model)
         return self.model
 
@@ -420,6 +424,7 @@ class NeuralProphet:
             )
         self.config_train.apply_train_speed(lr=True)
         self.optimizer = self.config_train.get_optimizer(self.model.parameters())
+        self.model.set_optimizer(self.optimizer)
         self.scheduler = self.config_train.get_scheduler(self.optimizer, steps_per_epoch=len(loader))
         return loader
 
@@ -577,6 +582,9 @@ class NeuralProphet:
             if not progress_bar:
                 live_out.append("ExtremaPrinter")
             live_loss = PlotLosses(outputs=live_out)
+
+
+
         for e in training_loop:
             metrics_live = {}
             self.metrics.reset()
