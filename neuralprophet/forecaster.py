@@ -588,10 +588,13 @@ class NeuralProphet:
                 live_out.append("ExtremaPrinter")
             live_loss = PlotLosses(outputs=live_out)
 
-        trainer = Trainer(max_epochs=self.config_train.epochs, logger = log)
-        res = trainer.fit(self.model, loader)
+        self.metrics.reset()
 
-        metrics_df = self.model.metrics_live
+        trainer = Trainer(max_epochs=self.config_train.epochs,
+                          # logger = log
+                          )
+        trainer.fit(self.model, loader)
+
 
         # for e in training_loop:
         #     metrics_live = {}
@@ -600,6 +603,7 @@ class NeuralProphet:
         #         val_metrics.reset()
         #     epoch_metrics = self._train_epoch(e, loader)
         #     metrics_live["{}".format(list(epoch_metrics)[0])] = epoch_metrics[list(epoch_metrics)[0]]
+        #
         #     if val:
         #         val_epoch_metrics = self._evaluate_epoch(val_loader, val_metrics)
         #         metrics_live["val_{}".format(list(val_epoch_metrics)[0])] = val_epoch_metrics[
@@ -629,12 +633,14 @@ class NeuralProphet:
         # ## Metrics
         # log.debug("Train Time: {:8.3f}".format(time.time() - start))
         # log.debug("Total Batches: {}".format(self.metrics.total_updates))
-        # metrics_df = self.metrics.get_stored_as_df()
+
+        metrics_df = self.metrics.get_stored_as_df()
+
         # if val:
         #     metrics_df_val = val_metrics.get_stored_as_df()
         #     for col in metrics_df_val.columns:
         #         metrics_df["{}_val".format(col)] = metrics_df_val[col]
-        return res
+        return metrics_df
 
     def _eval_true_ar(self):
         assert self.n_lags > 0
@@ -765,6 +771,8 @@ class NeuralProphet:
         if epochs is not None:
             self.config_train.epochs = default_epochs
         self.fitted = True
+
+        # print(metrics_df)
         return metrics_df
 
     def test(self, df):

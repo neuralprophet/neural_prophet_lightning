@@ -509,17 +509,19 @@ class TimeNet(pl.LightningModule):
         loss, reg_loss = self.forecaster._add_batch_regualarizations(
             loss, e, batch_idx / float(self.forecaster.loader_size)
         )
+
         self.forecaster.metrics.update(predicted = y_hat.detach(),
                                        target = y.detach(),
                                        values = {"Loss": loss, "RegLoss": reg_loss})
         # predicted = predicted.detach(), target = targets.detach(), values = {"Loss": loss, "RegLoss": reg_loss}
+        return loss
 
-        return loss, reg_loss
 
-    def training_step_end(self, *args, **kwargs):
+    def on_epoch_end(self) -> None:
         epoch_metrics = self.forecaster.metrics.compute(save=True)
         self.metrics_live["{}".format(list(epoch_metrics)[0])] = epoch_metrics[list(epoch_metrics)[0]]
-
+        # print(self.forecaster.metrics.print())
+        self.forecaster.metrics.reset()
 
     def configure_optimizers(self):
         return [self.optimizer], [self.scheduler]

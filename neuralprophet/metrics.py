@@ -149,6 +149,7 @@ class MetricsCollection:
         """Nice-prints stored values"""
         metrics_string = self.get_stored_as_df(loc=loc).to_string(float_format=lambda x: "{:6.3f}".format(x))
         log.debug(metrics_string)
+        return metrics_string
 
 
 class Metric:
