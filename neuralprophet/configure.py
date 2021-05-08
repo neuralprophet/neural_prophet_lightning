@@ -108,10 +108,6 @@ class Train:
     loss_func: (str, torch.nn.modules.loss._Loss, "typing.Callable")
     optimizer: (str, torch.optim.Optimizer)
     train_speed: (int, float, None)
-    ar_sparsity: (float, None)
-    reg_lambda_trend: float = None
-    trend_reg_threshold: (bool, float) = None
-    reg_lambda_season: float = None
     n_data: int = field(init=False)
 
     def __post_init__(self):

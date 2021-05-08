@@ -772,7 +772,6 @@ class NeuralProphet:
             self.config_train.epochs = default_epochs
         self.fitted = True
 
-        # print(metrics_df)
         return metrics_df
 
     def test(self, df):
