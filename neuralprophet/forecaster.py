@@ -447,30 +447,6 @@ class NeuralProphet:
         loader = DataLoader(dataset, batch_size=min(1024, len(dataset)), shuffle=False, drop_last=False)
         return loader
 
-    # def _train_epoch(self, e, loader):
-    #     """Make one complete iteration over all samples in dataloader and update model after each batch.
-    #
-    #     Args:
-    #         e (int): current epoch number
-    #         loader (torch DataLoader): Training Dataloader
-    #     """
-    #     self.model.train()
-    #     for i, (inputs, targets) in enumerate(loader):
-    #         # Run forward calculation
-    #         predicted = self.model.forward(inputs)
-    #         # Compute loss.
-    #         loss = self.config_train.loss_func(predicted, targets)
-    #         # Regularize.
-    #         loss, reg_loss = self._add_batch_regualarizations(loss, e, i / float(len(loader)))
-    #         self.optimizer.zero_grad()
-    #         loss.backward()
-    #         self.optimizer.step()
-    #         self.scheduler.step()
-    #         self.metrics.update(
-    #             predicted=predicted.detach(), target=targets.detach(), values={"Loss": loss, "RegLoss": reg_loss}
-    #         )
-    #     epoch_metrics = self.metrics.compute(save=True)
-    #     return epoch_metrics
 
     def _add_batch_regualarizations(self, loss, e, iter_progress):
         """Add regulatization terms to loss, if applicable
@@ -522,23 +498,6 @@ class NeuralProphet:
         loss = loss + reg_loss
         return loss, reg_loss
 
-    def _evaluate_epoch(self, loader, val_metrics):
-        """Evaluates model performance.
-
-        Args:
-            loader (torch DataLoader):  instantiated Validation Dataloader (with TimeDataset)
-            val_metrics (MetricsCollection): validation metrics to be computed.
-        Returns:
-            dict with evaluation metrics
-        """
-        with torch.no_grad():
-            self.model.eval()
-            for inputs, targets in loader:
-                predicted = self.model.forward(inputs)
-                val_metrics.update(predicted=predicted.detach(), target=targets.detach())
-            val_metrics = val_metrics.compute(save=True)
-        return val_metrics
-
     def _train(self, df, df_val=None, progress_bar=True, plot_live_loss=False):
         """Execute model training procedure for a configured number of epochs.
 
@@ -573,6 +532,7 @@ class NeuralProphet:
         if val:
             val_loader = self._init_val_loader(df_val)
             val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+            self.val_metrics = val_metrics
 
         ## Run
         start = time.time()
@@ -589,57 +549,28 @@ class NeuralProphet:
             live_loss = PlotLosses(outputs=live_out)
 
         self.metrics.reset()
+        if val:
+            self.val_metrics.reset()
 
-        trainer = Trainer(max_epochs=self.config_train.epochs,
+        self.trainer = Trainer(max_epochs=self.config_train.epochs,
                           # logger = log
                           )
-        trainer.fit(self.model, loader)
+        if val:
+            self.trainer.fit(self.model, train_dataloader = loader, val_dataloaders = val_loader)
+        else:
+            self.trainer.fit(self.model, train_dataloader = loader)
 
 
-        # for e in training_loop:
-        #     metrics_live = {}
-        #     self.metrics.reset()
-        #     if val:
-        #         val_metrics.reset()
-        #     epoch_metrics = self._train_epoch(e, loader)
-        #     metrics_live["{}".format(list(epoch_metrics)[0])] = epoch_metrics[list(epoch_metrics)[0]]
-        #
-        #     if val:
-        #         val_epoch_metrics = self._evaluate_epoch(val_loader, val_metrics)
-        #         metrics_live["val_{}".format(list(val_epoch_metrics)[0])] = val_epoch_metrics[
-        #             list(val_epoch_metrics)[0]
-        #         ]
-        #         print_val_epoch_metrics = {k + "_val": v for k, v in val_epoch_metrics.items()}
-        #     else:
-        #         val_epoch_metrics = None
-        #         print_val_epoch_metrics = OrderedDict()
-
-
-        #     if progress_bar:
-        #         training_loop.set_description(f"Epoch[{(e+1)}/{self.config_train.epochs}]")
-        #         training_loop.set_postfix(ordered_dict=epoch_metrics, **print_val_epoch_metrics)
-        #     else:
-        #         metrics_string = utils.print_epoch_metrics(epoch_metrics, e=e, val_metrics=val_epoch_metrics)
-        #         if e == 0:
-        #             log.info(metrics_string.splitlines()[0])
-        #             log.info(metrics_string.splitlines()[1])
-        #         else:
-        #             log.info(metrics_string.splitlines()[1])
-        #     if plot_live_loss:
-        #         live_loss.update(metrics_live)
-        #     if plot_live_loss and (e % (1 + self.config_train.epochs // 10) == 0 or e + 1 == self.config_train.epochs):
-        #         live_loss.send()
-        #
-        # ## Metrics
-        # log.debug("Train Time: {:8.3f}".format(time.time() - start))
-        # log.debug("Total Batches: {}".format(self.metrics.total_updates))
+        ## Metrics
+        log.debug("Train Time: {:8.3f}".format(time.time() - start))
+        log.debug("Total Batches: {}".format(self.metrics.total_updates))
 
         metrics_df = self.metrics.get_stored_as_df()
 
-        # if val:
-        #     metrics_df_val = val_metrics.get_stored_as_df()
-        #     for col in metrics_df_val.columns:
-        #         metrics_df["{}_val".format(col)] = metrics_df_val[col]
+        if val:
+            metrics_df_val = val_metrics.get_stored_as_df()
+            for col in metrics_df_val.columns:
+                metrics_df["{}_val".format(col)] = metrics_df_val[col]
         return metrics_df
 
     def _eval_true_ar(self):
@@ -664,16 +595,20 @@ class NeuralProphet:
         Returns:
             df with evaluation metrics
         """
-        val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+        test_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
         if self.highlight_forecast_step_n is not None:
-            val_metrics.add_specific_target(target_pos=self.highlight_forecast_step_n - 1)
+            test_metrics.add_specific_target(target_pos=self.highlight_forecast_step_n - 1)
         ## Run
-        val_metrics_dict = self._evaluate_epoch(loader, val_metrics)
+        
+        self.test_metrics = test_metrics
+        self.trainer.test(self.model, test_dataloaders=loader, ckpt_path=None, verbose = False)
+        
+        test_metrics_dict = self.test_metrics.compute(save=True)
 
         if self.true_ar_weights is not None:
-            val_metrics_dict["sTPE"] = self._eval_true_ar()
-        log.info("Validation metrics: {}".format(utils.print_epoch_metrics(val_metrics_dict)))
-        val_metrics_df = val_metrics.get_stored_as_df()
+            test_metrics_dict["sTPE"] = self._eval_true_ar()
+        log.info("Validation metrics: {}".format(utils.print_epoch_metrics(test_metrics_dict)))
+        val_metrics_df = self.test_metrics.get_stored_as_df()
         return val_metrics_df
 
     def split_df(self, df, freq, valid_p=0.2):
@@ -1351,3 +1286,9 @@ class NeuralProphet:
             yearly_start=yearly_start,
             figsize=figsize,
         )
+    
+    
+    
+    
+    
+

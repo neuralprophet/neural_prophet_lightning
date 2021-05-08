@@ -503,7 +503,6 @@ class TimeNet(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-        ##### less costyl
         e = self.current_epoch
 
         loss, reg_loss = self.forecaster._add_batch_regualarizations(
@@ -513,33 +512,43 @@ class TimeNet(pl.LightningModule):
         self.forecaster.metrics.update(predicted = y_hat.detach(),
                                        target = y.detach(),
                                        values = {"Loss": loss, "RegLoss": reg_loss})
-        # predicted = predicted.detach(), target = targets.detach(), values = {"Loss": loss, "RegLoss": reg_loss}
         return loss
+    
+    
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = self.loss_func(y_hat, y)
+                
+        self.forecaster.val_metrics.update(predicted=y_hat.detach(), target=y.detach())
+        
+        return loss
+    
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = self.loss_func(y_hat, y)
+        
+        self.forecaster.test_metrics.update(predicted=y_hat.detach(), target=y.detach())
 
-
-    def on_epoch_end(self) -> None:
+        return loss
+    
+    def training_epoch_end(self, outputs):
         epoch_metrics = self.forecaster.metrics.compute(save=True)
         self.metrics_live["{}".format(list(epoch_metrics)[0])] = epoch_metrics[list(epoch_metrics)[0]]
-        # print(self.forecaster.metrics.print())
+
         self.forecaster.metrics.reset()
+        
+    def validation_epoch_end(self, validation_step_outputs):
+        val_epoch_metrics = self.forecaster.val_metrics.compute(save=True)
+        self.metrics_live["val_{}".format(list(val_epoch_metrics)[0])] = val_epoch_metrics[
+            list(val_epoch_metrics)[0]]
+        self.forecaster.val_metrics.reset()
+
 
     def configure_optimizers(self):
         return [self.optimizer], [self.scheduler]
 
-    # идеально добавить вот эту штуку просто вместо говна
-    # def get_scheduler(self, optimizer, steps_per_epoch):
-    #     return torch.optim.lr_scheduler.OneCycleLR(
-    #         optimizer,
-    #         max_lr=self.learning_rate,
-    #         epochs=self.epochs,
-    #         steps_per_epoch=steps_per_epoch,
-    #         pct_start=0.3333,
-    #         anneal_strategy="cos",
-    #         div_factor=100.0,
-    #         final_div_factor=4000.0,
-    #     )
-
-    ###############
 
     def compute_components(self, inputs):
         """This method returns the values of each model component.
