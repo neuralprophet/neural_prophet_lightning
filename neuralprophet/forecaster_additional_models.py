@@ -38,7 +38,7 @@ class LSTM:
         normalize="auto",
         impute_missing=True,
         lstm_bias=True,
-        lstm_biderectional=False,
+        lstm_bidirectional=False,
     ):
         """
         Args:
@@ -110,7 +110,7 @@ class LSTM:
 
         # LSTM specific
         self.lstm_bias = lstm_bias
-        self.lstm_biderectional = lstm_biderectional
+        self.lstm_bidirectional = lstm_bidirectional
 
         # set during fit()
         self.data_freq = None
@@ -138,7 +138,7 @@ class LSTM:
             hidden_size=self.config_model.d_hidden,
             num_layers=self.config_model.num_hidden_layers,
             bias=self.lstm_bias,
-            bidirectional=self.lstm_biderectional,
+            bidirectional=self.lstm_bidirectional,
             n_forecasts=self.n_forecasts,
         )
 
@@ -266,7 +266,7 @@ class LSTM:
         loader = DataLoader(dataset, batch_size=min(1024, len(dataset)), shuffle=False, drop_last=False)
         return loader
 
-    def _train(self, df, df_val=None, progress_bar=True, plot_live_loss=False):
+    def _train(self, df, df_val=None, progress_bar=True, plot_live_loss=False, hyperparameter_optim=False):
         """Execute model training procedure for a configured number of epochs.
 
         Args:
@@ -328,22 +328,25 @@ class LSTM:
             # logger = log
         )
 
-        if val:
-            self.trainer.fit(self.model, train_dataloader=loader, val_dataloaders=val_loader)
+        if hyperparameter_optim:
+            return loader, val_loader, self.model
         else:
-            self.trainer.fit(self.model, train_dataloader=loader)
+            if val:
+                self.trainer.fit(self.model, train_dataloader=loader, val_dataloaders=val_loader)
+            else:
+                self.trainer.fit(self.model, train_dataloader=loader)
 
-        ## Metrics
-        log.debug("Train Time: {:8.3f}".format(time.time() - start))
-        log.debug("Total Batches: {}".format(self.metrics.total_updates))
+            ## Metrics
+            log.debug("Train Time: {:8.3f}".format(time.time() - start))
+            log.debug("Total Batches: {}".format(self.metrics.total_updates))
 
-        metrics_df = self.metrics.get_stored_as_df()
+            metrics_df = self.metrics.get_stored_as_df()
 
-        if val:
-            metrics_df_val = self.val_metrics.get_stored_as_df()
-            for col in metrics_df_val.columns:
-                metrics_df["{}_val".format(col)] = metrics_df_val[col]
-        return metrics_df
+            if val:
+                metrics_df_val = self.val_metrics.get_stored_as_df()
+                for col in metrics_df_val.columns:
+                    metrics_df["{}_val".format(col)] = metrics_df_val[col]
+            return metrics_df
 
     def _evaluate(self, loader):
         """Evaluates model performance.
@@ -462,6 +465,23 @@ class LSTM:
         self.fitted = True
 
         return metrics_df
+
+    def _hyperparameter_optimization(self, df, freq, epochs=None, validate_each_epoch=True, valid_p=0.2):
+
+        self.data_freq = freq
+        if epochs is not None:
+            default_epochs = self.config_train.epochs
+            self.config_train.epochs = epochs
+        if self.fitted is True:
+            log.warning("Model has already been fitted. Re-fitting will produce different results.")
+        df = df_utils.check_dataframe(
+            df, check_y=True)
+        df = self._handle_missing_data(df, freq=self.data_freq)
+        if validate_each_epoch:
+            df_train, df_val = df_utils.split_df(df, n_lags=self.n_lags, n_forecasts=self.n_forecasts, valid_p=valid_p)
+            tr_loader, val_loader, model = self._train(df_train, df_val, hyperparameter_optim=True)
+
+        return tr_loader, val_loader, model
 
     def test(self, df):
         """Evaluate model on holdout data.

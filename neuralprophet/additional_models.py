@@ -17,7 +17,10 @@ class LightLSTM(pl.LightningModule):
             bidirectional=bidirectional,
             batch_first=False,
         )
-        self.linear = nn.Linear(hidden_size, n_forecasts)
+        if bidirectional:
+            self.linear = nn.Linear(hidden_size*num_layers, n_forecasts)
+        else:
+            self.linear = nn.Linear(hidden_size, n_forecasts)
         # Metrics live
         self.metrics_live = {}
 
@@ -45,7 +48,7 @@ class LightLSTM(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-
+        self.log('train_loss', loss)
         self.forecaster.metrics.update(predicted=y_hat.detach(), target=y.detach(), values={"Loss": loss})
         return loss
 
@@ -53,7 +56,7 @@ class LightLSTM(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-
+        self.log('val_loss', loss)
         self.forecaster.val_metrics.update(predicted=y_hat.detach(), target=y.detach())
 
         return loss
@@ -62,7 +65,7 @@ class LightLSTM(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-
+        self.log('test_loss', loss)
         self.forecaster.test_metrics.update(predicted=y_hat.detach(), target=y.detach())
 
         return loss
