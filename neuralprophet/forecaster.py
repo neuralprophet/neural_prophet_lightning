@@ -21,6 +21,7 @@ from neuralprophet.plot_model_parameters import plot_parameters
 from neuralprophet import metrics
 from neuralprophet.utils import set_logger_level
 from pytorch_lightning import Trainer
+
 log = logging.getLogger("NP.forecaster")
 
 
@@ -146,7 +147,6 @@ class NeuralProphet:
 
         # Training
         self.config_train = configure.from_kwargs(configure.Train, kwargs)
-
 
         self.metrics = metrics.MetricsCollection(
             metrics=[
@@ -447,7 +447,6 @@ class NeuralProphet:
         loader = DataLoader(dataset, batch_size=min(1024, len(dataset)), shuffle=False, drop_last=False)
         return loader
 
-
     def _add_batch_regualarizations(self, loss, e, iter_progress):
         """Add regulatization terms to loss, if applicable
 
@@ -498,7 +497,7 @@ class NeuralProphet:
         loss = loss + reg_loss
         return loss, reg_loss
 
-    def _train(self, df, df_val=None, progress_bar=True, plot_live_loss=False):
+    def _train(self, df, df_val=None, progress_bar=True, plot_live_loss=False, hyperparameter_optim=False):
         """Execute model training procedure for a configured number of epochs.
 
         Args:
@@ -552,26 +551,32 @@ class NeuralProphet:
         if val:
             self.val_metrics.reset()
 
-        self.trainer = Trainer(max_epochs=self.config_train.epochs,
-                          # logger = log
-                          )
-        if val:
-            self.trainer.fit(self.model, train_dataloader = loader, val_dataloaders = val_loader)
+        self.trainer = Trainer(
+            max_epochs=self.config_train.epochs,
+            checkpoint_callback=False,
+            logger=False
+            # logger = log
+        )
+
+        if hyperparameter_optim:
+            return loader, val_loader, self.model
         else:
-            self.trainer.fit(self.model, train_dataloader = loader)
+            if val:
+                self.trainer.fit(self.model, train_dataloader=loader, val_dataloaders=val_loader)
+            else:
+                self.trainer.fit(self.model, train_dataloader=loader)
 
+            ## Metrics
+            log.debug("Train Time: {:8.3f}".format(time.time() - start))
+            log.debug("Total Batches: {}".format(self.metrics.total_updates))
 
-        ## Metrics
-        log.debug("Train Time: {:8.3f}".format(time.time() - start))
-        log.debug("Total Batches: {}".format(self.metrics.total_updates))
+            metrics_df = self.metrics.get_stored_as_df()
 
-        metrics_df = self.metrics.get_stored_as_df()
-
-        if val:
-            metrics_df_val = val_metrics.get_stored_as_df()
-            for col in metrics_df_val.columns:
-                metrics_df["{}_val".format(col)] = metrics_df_val[col]
-        return metrics_df
+            if val:
+                metrics_df_val = val_metrics.get_stored_as_df()
+                for col in metrics_df_val.columns:
+                    metrics_df["{}_val".format(col)] = metrics_df_val[col]
+            return metrics_df
 
     def _eval_true_ar(self):
         assert self.n_lags > 0
@@ -599,10 +604,10 @@ class NeuralProphet:
         if self.highlight_forecast_step_n is not None:
             test_metrics.add_specific_target(target_pos=self.highlight_forecast_step_n - 1)
         ## Run
-        
+
         self.test_metrics = test_metrics
-        self.trainer.test(self.model, test_dataloaders=loader, ckpt_path=None, verbose = False)
-        
+        self.trainer.test(self.model, test_dataloaders=loader, ckpt_path=None, verbose=False)
+
         test_metrics_dict = self.test_metrics.compute(save=True)
 
         if self.true_ar_weights is not None:
@@ -708,6 +713,22 @@ class NeuralProphet:
         self.fitted = True
 
         return metrics_df
+
+    def _hyperparameter_optimization(self, df, freq, epochs=None, validate_each_epoch=True, valid_p=0.2):
+
+        self.data_freq = freq
+        if epochs is not None:
+            default_epochs = self.config_train.epochs
+            self.config_train.epochs = epochs
+        if self.fitted is True:
+            log.warning("Model has already been fitted. Re-fitting will produce different results.")
+        df = df_utils.check_dataframe(df, check_y=True)
+        df = self._handle_missing_data(df, freq=self.data_freq)
+        if validate_each_epoch:
+            df_train, df_val = df_utils.split_df(df, n_lags=self.n_lags, n_forecasts=self.n_forecasts, valid_p=valid_p)
+            tr_loader, val_loader, model = self._train(df_train, df_val, hyperparameter_optim=True)
+
+        return tr_loader, val_loader, model
 
     def test(self, df):
         """Evaluate model on holdout data.
@@ -1286,9 +1307,3 @@ class NeuralProphet:
             yearly_start=yearly_start,
             figsize=figsize,
         )
-    
-    
-    
-    
-    
-

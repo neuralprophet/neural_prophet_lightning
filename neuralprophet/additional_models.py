@@ -2,9 +2,7 @@ import torch.nn as nn
 import pytorch_lightning as pl
 import logging
 
-
 log = logging.getLogger("NP.additional_models")
-
 
 class LightLSTM(pl.LightningModule):
     def __init__(self, input_size, hidden_size, num_layers, bias, bidirectional, n_forecasts):
@@ -18,7 +16,7 @@ class LightLSTM(pl.LightningModule):
             batch_first=False,
         )
         if bidirectional:
-            self.linear = nn.Linear(hidden_size*num_layers, n_forecasts)
+            self.linear = nn.Linear(hidden_size * 2, n_forecasts)
         else:
             self.linear = nn.Linear(hidden_size, n_forecasts)
         # Metrics live
@@ -48,7 +46,7 @@ class LightLSTM(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-        self.log('train_loss', loss)
+        self.log("train_loss", loss)
         self.forecaster.metrics.update(predicted=y_hat.detach(), target=y.detach(), values={"Loss": loss})
         return loss
 
@@ -56,7 +54,7 @@ class LightLSTM(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-        self.log('val_loss', loss)
+        self.log("val_loss", loss)
         self.forecaster.val_metrics.update(predicted=y_hat.detach(), target=y.detach())
 
         return loss
@@ -65,7 +63,7 @@ class LightLSTM(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-        self.log('test_loss', loss)
+        self.log("test_loss", loss)
         self.forecaster.test_metrics.update(predicted=y_hat.detach(), target=y.detach())
 
         return loss

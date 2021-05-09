@@ -474,8 +474,7 @@ class LSTM:
             self.config_train.epochs = epochs
         if self.fitted is True:
             log.warning("Model has already been fitted. Re-fitting will produce different results.")
-        df = df_utils.check_dataframe(
-            df, check_y=True)
+        df = df_utils.check_dataframe(df, check_y=True)
         df = self._handle_missing_data(df, freq=self.data_freq)
         if validate_each_epoch:
             df_train, df_val = df_utils.split_df(df, n_lags=self.n_lags, n_forecasts=self.n_forecasts, valid_p=valid_p)

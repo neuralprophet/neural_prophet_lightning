@@ -508,47 +508,43 @@ class TimeNet(pl.LightningModule):
         loss, reg_loss = self.forecaster._add_batch_regualarizations(
             loss, e, batch_idx / float(self.forecaster.loader_size)
         )
-
-        self.forecaster.metrics.update(predicted = y_hat.detach(),
-                                       target = y.detach(),
-                                       values = {"Loss": loss, "RegLoss": reg_loss})
+        self.log("train_loss", loss)
+        self.forecaster.metrics.update(
+            predicted=y_hat.detach(), target=y.detach(), values={"Loss": loss, "RegLoss": reg_loss}
+        )
         return loss
-    
-    
+
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-                
+        self.log("val_loss", loss)
         self.forecaster.val_metrics.update(predicted=y_hat.detach(), target=y.detach())
-        
+
         return loss
-    
+
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_func(y_hat, y)
-        
+        self.log("test_loss", loss)
         self.forecaster.test_metrics.update(predicted=y_hat.detach(), target=y.detach())
 
         return loss
-    
+
     def training_epoch_end(self, outputs):
         epoch_metrics = self.forecaster.metrics.compute(save=True)
         self.metrics_live["{}".format(list(epoch_metrics)[0])] = epoch_metrics[list(epoch_metrics)[0]]
 
         self.forecaster.metrics.reset()
-        
+
     def validation_epoch_end(self, validation_step_outputs):
         val_epoch_metrics = self.forecaster.val_metrics.compute(save=True)
-        self.metrics_live["val_{}".format(list(val_epoch_metrics)[0])] = val_epoch_metrics[
-            list(val_epoch_metrics)[0]]
+        self.metrics_live["val_{}".format(list(val_epoch_metrics)[0])] = val_epoch_metrics[list(val_epoch_metrics)[0]]
         self.forecaster.val_metrics.reset()
-
 
     def configure_optimizers(self):
         return [self.optimizer], [self.scheduler]
-
 
     def compute_components(self, inputs):
         """This method returns the values of each model component.
