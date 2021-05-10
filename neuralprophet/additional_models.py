@@ -29,6 +29,13 @@ class LightLSTM(pl.LightningModule):
             bidirectional=bidirectional,
             batch_first=False,
         )
+        '''
+            input_size: similar to n_lags from NeuralProphet, size of input data
+            hidden_size: size of hidden layer
+            num_layers: number of layers
+            bias: 
+            bidirectional: whether the LSTM used will be bidirectional or not
+        '''
         if bidirectional:
             self.linear = nn.Linear(hidden_size * 2, n_forecasts)
         else:

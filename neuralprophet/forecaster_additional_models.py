@@ -23,7 +23,6 @@ from pytorch_lightning.callbacks import EarlyStopping
 import pytorch_lightning as pl
 
 
-
 log = logging.getLogger("AdditionalModels.forecaster")
 
 
@@ -660,24 +659,35 @@ class LSTM:
         )
 
 
-
-
-
 class NBeatsNP:
     def __init__(
-            self,
-            max_encoder_length=150,
-            batch_size=None,
-            epochs=100,
-            num_gpus=0,
-            patience_early_stopping=10,
-            early_stop=True,
-            weight_decay=1e-2,
-            learning_rate=3e-2,
-            auto_lr_find=True,
-            num_workers=3,
-            loss_func='Huber'
+        self,
+        max_encoder_length=150,
+        batch_size=None,
+        epochs=100,
+        num_gpus=0,
+        patience_early_stopping=10,
+        early_stop=True,
+        weight_decay=1e-2,
+        learning_rate=3e-2,
+        auto_lr_find=True,
+        num_workers=3,
+        loss_func="Huber",
     ):
+        '''
+        Args:
+            max_encoder_length: int, — max encoder size for NBeats, can be seen as equivalent for n_lags in NP
+            batch_size: int, — batch_size. If set to None, automatic batch size will be set
+            epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
+            num_gpus: int, — number of gpus to use
+            patience_early_stopping: int, — patience parameter of EarlyStopping callback
+            early_stop: bool, — whether to use EarlyStopping callback
+            weight_decay: float, — weight_decay parameter for NBeats model
+            learning_rate: float, — learning rate for the model. Will be overwritten, if auto_lr_find is used
+            auto_lr_find: bool, — whether to use automatic laerning rate finder
+            num_workers: int, — number of workers for DataLoaders
+            loss_func: str, ['Huber', 'MSE'] — what loss function will be used
+        '''
 
         self.batch_size = batch_size
 
@@ -725,29 +735,43 @@ class NBeatsNP:
         self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
-        model = NBeats.from_dataset(training,
-                                    learning_rate=self.learning_rate,
-                                    log_gradient_flow=False,
-                                    weight_decay=self.weight_decay,
-                                    )
+        '''
+        Args:
+            training: TimeSeriesDataset, used to generate model from_dataset
+            train_dataloader: train DataLoader, used to find LR if needed
+
+        Returns:
+            model: pytorch lightning model
+        '''
+        model = NBeats.from_dataset(
+            training,
+            learning_rate=self.learning_rate,
+            log_gradient_flow=False,
+            weight_decay=self.weight_decay,
+        )
         if self.auto_lr_find:
-            res = self.trainer.tuner.lr_find(model,
-                                             train_dataloader=train_dataloader,
-                                             min_lr=1e-5,
-                                             max_lr=1e2)
+            res = self.trainer.tuner.lr_find(model, train_dataloader=train_dataloader, min_lr=1e-5, max_lr=1e2)
 
             model.hparams.learning_rate = res.suggestion()
             self.learning_rate = res.suggestion()
 
         return model
 
-    def set_auto_batch_epoch(self,
-                             n_data: int,
-                             min_batch: int = 16,
-                             max_batch: int = 256,
-                             min_epoch: int = 40,
-                             max_epoch: int = 400,
-                             ):
+    def set_auto_batch_epoch(
+        self,
+        n_data: int,
+        min_batch: int = 16,
+        max_batch: int = 256
+    ):
+        '''
+        Args:
+            n_data: length of time series
+            min_batch: min batch size allowed
+            max_batch: max batch size allowed
+
+        Returns:
+            self.batch_size is set
+        '''
         assert n_data >= 1
         log_data = np.log10(n_data)
         if self.batch_size is None:
@@ -794,13 +818,27 @@ class NBeatsNP:
         return df
 
     def _create_dataset(self, df, freq, valid_p):
+        '''
+        Args:
+            df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
+            freq: str — Data step sizes. Frequency of data recording,
+                Any valid frequency for pd.date_range, such as '5min', 'D' or 'MS'
+            valid_p: validation percentage. By default 0.2
+
+        Returns:
+            training: TimeSeriesDataset with training data
+            train_dataloader: train DataLoader
+            val_dataloader: validation DataLoader
+
+        '''
         df = df_utils.check_dataframe(df)
         df = self._handle_missing_data(df, freq)
-        df = df[['ds', 'y']]
-        df['time_idx'] = range(df.shape[0])
-        df['series'] = 0
+        df = df[["ds", "y"]]
+        df["time_idx"] = range(df.shape[0])
+        df["series"] = 0
         self.n_data = df.shape[0]
-        self.set_auto_batch_epoch(self.n_data)
+        if type(self.batch_size) == type(None):
+            self.set_auto_batch_epoch(self.n_data)
 
         max_prediction_length = int(valid_p * df.shape[0])
         training_cutoff = df.shape[0] - int(valid_p * df.shape[0])
@@ -824,27 +862,30 @@ class NBeatsNP:
             add_target_scales=False,
         )
 
-        validation = TimeSeriesDataSet.from_dataset(training,
-                                                    df,
-                                                    min_prediction_idx=training_cutoff)
+        validation = TimeSeriesDataSet.from_dataset(training, df, min_prediction_idx=training_cutoff)
 
-        train_dataloader = training.to_dataloader(train=True,
-                                                  batch_size=self.batch_size,
-                                                  num_workers=self.num_workers)
-        val_dataloader = validation.to_dataloader(train=False,
-                                                  batch_size=self.batch_size,
-                                                  num_workers=self.num_workers)
+        train_dataloader = training.to_dataloader(train=True, batch_size=self.batch_size, num_workers=self.num_workers)
+        val_dataloader = validation.to_dataloader(train=False, batch_size=self.batch_size, num_workers=self.num_workers)
 
         return training, train_dataloader, val_dataloader
 
     def _train(self, training, train_dataloader, val_dataloader, hyperparameter_optim=False):
+        '''
+        Args:
+            training: TimeSeriesDataset with training data
+            train_dataloader: train DataLoader
+            val_dataloader: validation DataLoader
+            hyperparameter_optim: whether the function is called for hyperparameter optim or not
+
+        Returns:
+            metrics_df: dataframe with training loss per epoch
+            model: if hyperparameter_optim = True, the initialized model is returned
+        '''
         callbacks = []
         if self.early_stop:
-            early_stop_callback = EarlyStopping(monitor="val_loss",
-                                                min_delta=1e-4,
-                                                patience=self.patience_early_stopping,
-                                                verbose=False,
-                                                mode="min")
+            early_stop_callback = EarlyStopping(
+                monitor="val_loss", min_delta=1e-4, patience=self.patience_early_stopping, verbose=False, mode="min"
+            )
             callbacks = [early_stop_callback]
 
         self.trainer = pl.Trainer(
@@ -867,10 +908,11 @@ class NBeatsNP:
             return self.model
         else:
 
-            self.trainer.fit(self.model,
-                             train_dataloader=train_dataloader,
-                             val_dataloaders=val_dataloader,
-                             )
+            self.trainer.fit(
+                self.model,
+                train_dataloader=train_dataloader,
+                val_dataloaders=val_dataloader,
+            )
             self.fitted = True
 
             metrics_df = self.metrics.get_stored_as_df()
@@ -881,6 +923,16 @@ class NBeatsNP:
             return metrics_df
 
     def fit(self, df, freq, valid_p=0.2):
+        '''
+        Args:
+            df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
+            freq: str — Data step sizes. Frequency of data recording,
+                Any valid frequency for pd.date_range, such as '5min', 'D' or 'MS'
+            valid_p: validation percentage. By default 0.2
+
+        Returns:
+            metrics_df: dataframe with training loss per epoch
+        '''
 
         training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
         metrics_df = self._train(training, train_dataloader, val_dataloader)
@@ -889,8 +941,18 @@ class NBeatsNP:
     def _hyperparameter_optimization(self, df, freq, valid_p=0.2):
         training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
         model = self._train(training, train_dataloader, val_dataloader, hyperparameter_optim=True)
+        return train_dataloader, val_dataloader, model
 
     def make_future_dataframe(self, df, freq, periods=0, n_historic_predictions=0):
+        '''
+        Creates a dataframe for prediction
+        Args:
+            periods: number of future periods to forecast
+            n_historic_predictions: number of historic_predictions to include in forecast
+
+        Returns:
+            future_dataframe: DataFrame, used further for prediction
+        '''
 
         self.periods = periods
         self.n_historic_predictions = n_historic_predictions
@@ -899,9 +961,9 @@ class NBeatsNP:
 
         df = df_utils.check_dataframe(df)
         df = self._handle_missing_data(df, freq)
-        df = df[['ds', 'y']]
-        df['time_idx'] = range(df.shape[0])
-        df['series'] = 0
+        df = df[["ds", "y"]]
+        df["time_idx"] = range(df.shape[0])
+        df["series"] = 0
         self.n_data = df.shape[0]
 
         encoder_data = df[lambda x: x.time_idx > x.time_idx.max() - (self.max_encoder_length + n_historic_predictions)]
@@ -910,15 +972,22 @@ class NBeatsNP:
             [last_data.assign(ds=lambda x: x.ds + pd.offsets.MonthBegin(i)) for i in range(1, periods + 1)],
             ignore_index=True,
         )
-        decoder_data['time_idx'] = range(decoder_data['time_idx'].iloc[0] + 1,
-                                         decoder_data['time_idx'].iloc[0] + periods + 1)
-        decoder_data['ds'] = pd.date_range(start=encoder_data['ds'].iloc[-1],
-                                           periods=periods + 1, freq=freq)[1:]
+        decoder_data["time_idx"] = range(
+            decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
+        )
+        decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=freq)[1:]
         future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
 
         return future_dataframe
 
     def predict(self, future_dataframe):
+        '''
+        Predicts based on the future_dataframe. Should be called only after make_future_dataframe is called
+        Args:
+            future_dataframe: DataFrame form make_future_dataframe function
+        Returns:
+            forecast dataframe
+        '''
 
         if self.fitted is False:
             log.warning("Model has not been fitted. Predictions will be random.")
@@ -944,12 +1013,12 @@ class NBeatsNP:
         y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()[0, : new_x["decoder_lengths"][0]]
         y_predicted = y_predicted.detach().numpy()
 
-        future_dataframe.loc[len(future_dataframe) - self.periods:, 'y'] = None
-        future_dataframe['yhat1'] = None
-        future_dataframe.loc[len(future_dataframe) - len(y_predicted):, 'yhat1'] = y_predicted
+        future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
+        future_dataframe["yhat1"] = None
+        future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
         cols = ["ds", "y", "yhat1"]  # cols to keep from df
         df_forecast = pd.concat((future_dataframe[cols],), axis=1)
-        df_forecast["residual1"] = df_forecast['yhat1'] - df_forecast["y"]
+        df_forecast["residual1"] = df_forecast["yhat1"] - df_forecast["y"]
 
         return df_forecast
 
