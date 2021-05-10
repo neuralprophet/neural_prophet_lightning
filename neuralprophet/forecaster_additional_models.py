@@ -673,10 +673,19 @@ class NBeatsNP:
         auto_lr_find=True,
         num_workers=3,
         loss_func="Huber",
+        from_dataset=True,
+        stack_types=['trend','seasonality'],
+        num_blocks=[3, 3],
+        num_block_layers=[3, 3],
+        widths=[32, 512],
+        sharing = [True, True],
+        expansion_coefficient_lengths = [3, 7],
+
     ):
-        '''
+        """
         Args:
-            max_encoder_length: int, — max encoder size for NBeats, can be seen as equivalent for n_lags in NP
+            max_encoder_length: int, — Number of time units that condition the predictions. Also known as 'lookback period'.
+                Should be between 1-10 times the prediction length. Can be seen as equivalent for n_lags in NP
             batch_size: int, — batch_size. If set to None, automatic batch size will be set
             epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
             num_gpus: int, — number of gpus to use
@@ -687,12 +696,40 @@ class NBeatsNP:
             auto_lr_find: bool, — whether to use automatic laerning rate finder
             num_workers: int, — number of workers for DataLoaders
             loss_func: str, ['Huber', 'MSE'] — what loss function will be used
-        '''
+            from_dataset bool: whether to initialize parameters automatically based on dataset, or used custom
+            stack_types: One of the following values: “generic”, “seasonality" or “trend". A list of strings
+                of length 1 or ‘num_stacks’. Default and recommended value
+                for generic mode: [“generic”] Recommended value for interpretable mode: [“trend”,”seasonality”]
+            num_blocks: The number of blocks per stack. A list of ints of length 1 or ‘num_stacks’.
+                Default and recommended value for generic mode: [1] Recommended value for interpretable mode: [3]
+            num_block_layers: Number of fully connected layers with ReLu activation per block. A list of ints of length
+                1 or ‘num_stacks’.
+                Default and recommended value for generic mode: [4] Recommended value for interpretable mode: [4]
+            width: Widths of the fully connected layers with ReLu activation in the blocks.
+                A list of ints of length 1 or ‘num_stacks’. Default and recommended value for generic mode: [512]
+                Recommended value for interpretable mode: [256, 2048]
+            sharing: Whether the weights are shared with the other blocks per stack.
+                A list of ints of length 1 or ‘num_stacks’. Default and recommended value for generic mode: [False]
+                Recommended value for interpretable mode: [True]
+            expansion_coefficient_length: If the type is “G” (generic), then the length of the expansion
+                coefficient.
+                If type is “T” (trend), then it corresponds to the degree of the polynomial. If the type is “S”
+                (seasonal) then this is the minimum period allowed, e.g. 2 for changes every timestep.
+                A list of ints of length 1 or ‘num_stacks’. Default value for generic mode: [32] Recommended value for
+                interpretable mode: [3]
+        """
 
         self.batch_size = batch_size
 
-        self.max_encoder_length = max_encoder_length
+        self.config_params_NBeats = {'stack_types':stack_types,
+                                     'num_blocks':num_blocks,
+                                     'num_block_layers':num_block_layers,
+                                     'widths':widths,
+                                     'sharing':sharing,
+                                     'expansion_coefficient_length':expansion_coefficient_lengths}
 
+        self.max_encoder_length = max_encoder_length
+        self.from_dataset = from_dataset
         self.epochs = epochs
         self.num_gpus = num_gpus
         self.patience_early_stopping = patience_early_stopping
@@ -735,20 +772,31 @@ class NBeatsNP:
         self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
-        '''
+        """
         Args:
             training: TimeSeriesDataset, used to generate model from_dataset
             train_dataloader: train DataLoader, used to find LR if needed
 
         Returns:
             model: pytorch lightning model
-        '''
-        model = NBeats.from_dataset(
-            training,
-            learning_rate=self.learning_rate,
-            log_gradient_flow=False,
-            weight_decay=self.weight_decay,
-        )
+        """
+        if self.from_dataset:
+            model = NBeats.from_dataset(
+                training,
+                learning_rate=self.learning_rate,
+                log_gradient_flow=False,
+                weight_decay=self.weight_decay,
+            )
+        else:
+            config = self.config_params_NBeats
+            model = NBeats.from_dataset(
+                training,
+                learning_rate=self.learning_rate,
+                log_gradient_flow=False,
+                weight_decay=self.weight_decay,
+                **config
+            )
+
         if self.auto_lr_find:
             res = self.trainer.tuner.lr_find(model, train_dataloader=train_dataloader, min_lr=1e-5, max_lr=1e2)
 
@@ -757,13 +805,8 @@ class NBeatsNP:
 
         return model
 
-    def set_auto_batch_epoch(
-        self,
-        n_data: int,
-        min_batch: int = 16,
-        max_batch: int = 256
-    ):
-        '''
+    def set_auto_batch_epoch(self, n_data: int, min_batch: int = 16, max_batch: int = 256):
+        """
         Args:
             n_data: length of time series
             min_batch: min batch size allowed
@@ -771,7 +814,7 @@ class NBeatsNP:
 
         Returns:
             self.batch_size is set
-        '''
+        """
         assert n_data >= 1
         log_data = np.log10(n_data)
         if self.batch_size is None:
@@ -818,7 +861,7 @@ class NBeatsNP:
         return df
 
     def _create_dataset(self, df, freq, valid_p):
-        '''
+        """
         Args:
             df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
             freq: str — Data step sizes. Frequency of data recording,
@@ -830,7 +873,7 @@ class NBeatsNP:
             train_dataloader: train DataLoader
             val_dataloader: validation DataLoader
 
-        '''
+        """
         df = df_utils.check_dataframe(df)
         df = self._handle_missing_data(df, freq)
         df = df[["ds", "y"]]
@@ -870,7 +913,7 @@ class NBeatsNP:
         return training, train_dataloader, val_dataloader
 
     def _train(self, training, train_dataloader, val_dataloader, hyperparameter_optim=False):
-        '''
+        """
         Args:
             training: TimeSeriesDataset with training data
             train_dataloader: train DataLoader
@@ -880,7 +923,7 @@ class NBeatsNP:
         Returns:
             metrics_df: dataframe with training loss per epoch
             model: if hyperparameter_optim = True, the initialized model is returned
-        '''
+        """
         callbacks = []
         if self.early_stop:
             early_stop_callback = EarlyStopping(
@@ -923,7 +966,7 @@ class NBeatsNP:
             return metrics_df
 
     def fit(self, df, freq, valid_p=0.2):
-        '''
+        """
         Args:
             df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
             freq: str — Data step sizes. Frequency of data recording,
@@ -932,7 +975,7 @@ class NBeatsNP:
 
         Returns:
             metrics_df: dataframe with training loss per epoch
-        '''
+        """
 
         training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
         metrics_df = self._train(training, train_dataloader, val_dataloader)
@@ -944,7 +987,7 @@ class NBeatsNP:
         return train_dataloader, val_dataloader, model
 
     def make_future_dataframe(self, df, freq, periods=0, n_historic_predictions=0):
-        '''
+        """
         Creates a dataframe for prediction
         Args:
             periods: number of future periods to forecast
@@ -952,7 +995,7 @@ class NBeatsNP:
 
         Returns:
             future_dataframe: DataFrame, used further for prediction
-        '''
+        """
 
         self.periods = periods
         self.n_historic_predictions = n_historic_predictions
@@ -981,13 +1024,13 @@ class NBeatsNP:
         return future_dataframe
 
     def predict(self, future_dataframe):
-        '''
+        """
         Predicts based on the future_dataframe. Should be called only after make_future_dataframe is called
         Args:
             future_dataframe: DataFrame form make_future_dataframe function
         Returns:
             forecast dataframe
-        '''
+        """
 
         if self.fitted is False:
             log.warning("Model has not been fitted. Predictions will be random.")

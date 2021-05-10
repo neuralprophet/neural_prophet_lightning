@@ -57,6 +57,7 @@ class NeuralProphet:
         loss_func="Huber",
         optimizer="AdamW",
         train_speed=None,
+        gpus=None,
         normalize="auto",
         impute_missing=True,
     ):
@@ -124,6 +125,8 @@ class NeuralProphet:
                 potentially useful when under-, over-fitting, or simply in a hurry.
                 applies epochs *= 2**-train_speed, batch_size *= 2**train_speed, learning_rate *= 2**train_speed,
                 default None: equivalent to 0.
+            gpus Optional[Union[List[int], str, int]] = None: gpus used for training.
+                See https://pytorch-lightning.readthedocs.io/en/stable/advanced/multi_gpu.html for more details
 
             ## Data config
             normalize (str): Type of normalization to apply to the time series.
@@ -146,6 +149,7 @@ class NeuralProphet:
         self.impute_rolling = 20
         # Training
         self.config_train = configure.from_kwargs(configure.Train, kwargs)
+        self.gpus = gpus
 
         self.metrics = metrics.MetricsCollection(
             metrics=[
@@ -553,8 +557,8 @@ class NeuralProphet:
         self.trainer = Trainer(
             max_epochs=self.config_train.epochs,
             checkpoint_callback=False,
-            logger=False
-            # logger = log
+            logger=False,
+            gpus = self.gpus
         )
 
         if hyperparameter_optim:
