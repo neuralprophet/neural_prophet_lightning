@@ -32,6 +32,52 @@ Additionally, we will add LIBRA framework functional for benchmarking.
 Currently, this framework is available only in R, so we will implement it in python and include in NeuralProphet.
 This will allow future users to add datasets and compare results.
 
+
+## Repository structure:
+In this work we follow the original repository structure of NeuralProphet in order to preserve the existing functionality.
+Here we present the structure of repository and the files which were changed or added in the process of out project.
+
+
+├── LICENSE
+├── MANIFEST.in
+├── README.md
+├── README_old.md
+├── Report_TFDS.pdf
+├── docs
+├── example_data
+├── example_notebooks
+│   ├── LSTM_example.ipynb
+│   ├── NBeats_example.ipynb
+│   ├── hyperparameter_example.ipynb
+├── neuralprophet
+│   ├── __init__.py
+│   ├── additional_models.py
+│   ├── configure.py
+│   ├── forecaster.py
+│   ├── forecaster_additional_models.py
+│   ├── hyperparameter_tuner.py
+├── notes
+├── peer_reviews
+│   ├── First_peer_review_report_Cohortney.pdf
+│   ├── First_peer_review_report_FES.pdf
+│   └── First_peer_review_report_MMDF.pdf
+├── project_notebooks
+│   ├── lightning_functionlity_check.ipynb
+│   ├── nbeats.ipynb
+│   ├── new_models.ipynb
+│   └── new_models_1.ipynb
+├── pyproject.toml
+├── requirements.txt
+├── roadmap.png
+├── scripts
+├── setup.py
+├── test_lightning.py
+└── tests
+    ├── debug.py
+    ├── test_integration.py
+    └── test_unit.py
+
+
 ## Distribution of roles and roadmap
 We distributed our main tasks and goals evenly, as described on the roadmap below. 
 Both of us will work on refactoring into PyTorch Lightning.
