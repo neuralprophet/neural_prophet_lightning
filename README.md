@@ -89,5 +89,5 @@ Further, Polina will focus on hyperparameter tuning addition, while Alexey will 
 Afterwards, we will both work on the benchmarking using LIBRA framework and finalization of the project.
 
 
-
+<img src="roadmap_gantt.png" alt="roadmap"  width="600"/>
 
