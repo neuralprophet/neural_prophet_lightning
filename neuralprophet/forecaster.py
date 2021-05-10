@@ -144,7 +144,6 @@ class NeuralProphet:
         self.impute_missing = impute_missing
         self.impute_limit_linear = 5
         self.impute_rolling = 20
-
         # Training
         self.config_train = configure.from_kwargs(configure.Train, kwargs)
 

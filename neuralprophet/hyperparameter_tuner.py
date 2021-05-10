@@ -9,12 +9,13 @@ from neuralprophet import NeuralProphet
 
 
 def tune_hyperparameters(
-    model_name,
+    model_name,  # NP, LSTM
     df,
     freq,
     num_epochs=100,
     mode="auto",  #'manual'
     config=None,
+    num_samples=40, #number of samples from hyperparameter space
     resources_per_trial={"cpu": 1},
     return_results=True,
 ):
@@ -33,12 +34,14 @@ def tune_hyperparameters(
     def train_NP_tune(config, num_epochs=num_epochs):
         m = NeuralProphet(**config, epochs=num_epochs)
         train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
-
+        print(config)
         trainer = pl.Trainer(
             max_epochs=num_epochs,
             progress_bar_refresh_rate=0,
             num_sanity_val_steps=0,
             callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False
         )
         trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
 
@@ -51,6 +54,8 @@ def tune_hyperparameters(
             progress_bar_refresh_rate=0,
             num_sanity_val_steps=0,
             callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False
         )
         trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
 
@@ -88,11 +93,7 @@ def tune_hyperparameters(
                 "lstm_bidirectional": tune.choice([False, True]),
             }
 
-    scheduler = ASHAScheduler(
-        max_t=num_epochs,
-        grace_period=10,
-        reduction_factor=2
-    )
+    scheduler = ASHAScheduler(max_t=num_epochs, grace_period=10, reduction_factor=2)
     reporter = CLIReporter(parameter_columns=list(config.keys()), metric_columns=["loss", "training_iteration"])
 
     analysis = tune.run(
@@ -101,7 +102,7 @@ def tune_hyperparameters(
         metric="loss",
         mode="min",
         config=config,
-        num_samples=40,
+        num_samples=num_samples,
         verbose=False,
         scheduler=scheduler,
         progress_reporter=reporter,
