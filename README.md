@@ -38,44 +38,32 @@ In this work we follow the original repository structure of NeuralProphet in ord
 Here we present the structure of repository and the files which were changed or added in the process of out project.
 
 ``` 
-├── LICENSE
-├── MANIFEST.in
-├── README.md
-├── README_old.md
-├── Report_TFDS.pdf
-├── docs
-├── example_data
-├── example_notebooks
-│   ├── LSTM_example.ipynb
-│   ├── NBeats_example.ipynb
-│   ├── hyperparameter_example.ipynb
-├── neuralprophet
-│   ├── __init__.py
-│   ├── additional_models.py
-│   ├── configure.py
-│   ├── forecaster.py
-│   ├── forecaster_additional_models.py
-│   ├── hyperparameter_tuner.py
-├── notes
-├── peer_reviews
-│   ├── First_peer_review_report_Cohortney.pdf
-│   ├── First_peer_review_report_FES.pdf
-│   └── First_peer_review_report_MMDF.pdf
-├── project_notebooks
-│   ├── lightning_functionlity_check.ipynb
-│   ├── nbeats.ipynb
-│   ├── new_models.ipynb
-│   └── new_models_1.ipynb
-├── pyproject.toml
-├── requirements.txt
-├── roadmap.png
-├── scripts
-├── setup.py
-├── test_lightning.py
-└── tests
-    ├── debug.py
-    ├── test_integration.py
-    └── test_unit.py
+└── neural_prophet
+    ├── LICENSE
+    ├── MANIFEST.in
+    ├── README.md
+    ├── docs
+    ├── example_data
+    ├── example_notebooks
+    │   ├── LSTM_example.ipynb
+    │   ├── NBeats_example.ipynb
+    │   ├── hyperparameter_example.ipynb
+    ├── mkdocs.yml
+    ├── neuralprophet
+    │   ├── __init__.py
+    │   ├── additional_models.py
+    │   ├── configure.py
+    │   ├── forecaster.py
+    │   ├── forecaster_additional_models.py
+    │   ├── hyperparameter_tuner.py
+    │   ├── time_net.py
+    ├── notes
+    ├── peer_reviews
+    ├── pyproject.toml
+    ├── requirements.txt
+    ├── scripts
+    ├── setup.py
+    └── tests
 ``` 
 
 ## Distribution of roles and roadmap
