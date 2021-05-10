@@ -37,7 +37,7 @@ This will allow future users to add datasets and compare results.
 In this work we follow the original repository structure of NeuralProphet in order to preserve the existing functionality.
 Here we present the structure of repository and the files which were changed or added in the process of out project.
 
-
+``` 
 ├── LICENSE
 ├── MANIFEST.in
 ├── README.md
@@ -76,7 +76,7 @@ Here we present the structure of repository and the files which were changed or 
     ├── debug.py
     ├── test_integration.py
     └── test_unit.py
-
+``` 
 
 ## Distribution of roles and roadmap
 We distributed our main tasks and goals evenly, as described on the roadmap below. 
