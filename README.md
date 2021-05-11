@@ -5,7 +5,7 @@ This is the repository for NeuralProphet project for Theoretical Foundations of 
 Contributors are Alexey Voskoboinikov and Polina Pilyugina.
 The main aim of this project is to improve NeuralProphet Library.
 
-[Report](Report_TFDS.pdf) is contained in the repository.
+[Second status report](reports/Second_Status_Report_TFDS.pdf) is contained in the repository.
 
 ### Project outline
 - **Refactor the code** with **PyTorch Lightning** in accordance with existing API
