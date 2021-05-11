@@ -47,6 +47,7 @@ Here we present the structure of repository and the files which were changed or 
     ├── example_notebooks
     │   ├── LSTM_example.ipynb
     │   ├── NBeats_example.ipynb
+    │   ├── DeepAR_example.ipynb
     │   ├── hyperparameter_example.ipynb
     ├── mkdocs.yml
     ├── neuralprophet
