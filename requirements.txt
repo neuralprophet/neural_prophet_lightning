@@ -13,3 +13,4 @@ ipywidgets>=7.5.1
 dataclasses>=0.6
 pytorch-lightning==1.2.10
 pytorch-forecasting==0.8.5
+ray==1.3.0
