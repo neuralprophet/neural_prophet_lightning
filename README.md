@@ -113,6 +113,12 @@ We will write corresponding tests and documentation of implemented modules.
 Further, Polina will focus on hyperparameter tuning addition, while Alexey will implement LIBRA framework in python.
 Afterwards, we will both work on the benchmarking using LIBRA framework and finalization of the project.
 
+At a current stage, we are finished with code refactoring into Pytorch Lightning.
+We also added three models: LSTM, NBeats and DeepAR, and created a structure for TemporalFusionTransformer, which will be added further.
+We also implemented hyperparameter optimization module and will further work on adding support for other models.
+Currently, it supports LSTM and NeuralProphet. 
+
+
 <center>
 <img src="roadmap_gantt.png" alt="roadmap"  width="1000"/>
 </center>
