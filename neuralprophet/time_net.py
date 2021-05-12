@@ -486,15 +486,14 @@ class TimeNet(pl.LightningModule):
         out = trend + additive_components + trend.detach() * multiplicative_components
         return out
 
-    ###############
     def set_optimizer(self, optimizer):
-        self.optimizer = optimizer  ##### todo add this to init
+        self.optimizer = optimizer
 
     def set_scheduler(self, scheduler):
-        self.scheduler = scheduler  ##### todo add this to init
+        self.scheduler = scheduler
 
     def set_loss_func(self, loss_func):
-        self.loss_func = loss_func  ##### todo add this to init
+        self.loss_func = loss_func
 
     def set_forecaster(self, self_forecaster):
         self.forecaster = self_forecaster

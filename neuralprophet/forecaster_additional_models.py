@@ -256,11 +256,9 @@ class LSTM:
 
         self.config_train.apply_train_speed(lr=True)
         self.optimizer = self.config_train.get_optimizer(self.model.parameters())
-        ######
         self.model.set_optimizer(self.optimizer)
         self.scheduler = self.config_train.get_scheduler(self.optimizer, steps_per_epoch=len(loader))
         self.model.set_scheduler(self.scheduler)
-        ######
         return loader
 
     def _init_val_loader(self, df):
@@ -679,13 +677,12 @@ class NBeatsNP:
         num_workers=3,
         loss_func="Huber",
         from_dataset=True,
-        stack_types=['trend','seasonality'],
+        stack_types=["trend", "seasonality"],
         num_blocks=[3, 3],
         num_block_layers=[3, 3],
         widths=[32, 512],
-        sharing = [True, True],
-        expansion_coefficient_lengths = [3, 7],
-
+        sharing=[True, True],
+        expansion_coefficient_lengths=[3, 7],
     ):
         """
         Args:
@@ -726,12 +723,14 @@ class NBeatsNP:
 
         self.batch_size = batch_size
 
-        self.config_params_NBeats = {'stack_types':stack_types,
-                                     'num_blocks':num_blocks,
-                                     'num_block_layers':num_block_layers,
-                                     'widths':widths,
-                                     'sharing':sharing,
-                                     'expansion_coefficient_length':expansion_coefficient_lengths}
+        self.config_params_NBeats = {
+            "stack_types": stack_types,
+            "num_blocks": num_blocks,
+            "num_block_layers": num_block_layers,
+            "widths": widths,
+            "sharing": sharing,
+            "expansion_coefficient_length": expansion_coefficient_lengths,
+        }
 
         self.max_encoder_length = max_encoder_length
         self.from_dataset = from_dataset
@@ -799,7 +798,7 @@ class NBeatsNP:
                 learning_rate=self.learning_rate,
                 log_gradient_flow=False,
                 weight_decay=self.weight_decay,
-                **config
+                **config,
             )
 
         if self.auto_lr_find:
@@ -1093,23 +1092,23 @@ class NBeatsNP:
         )
 
 
-class DeepAR():
+class DeepAR:
     def __init__(
-            self,
-            context_length=60,
-            prediction_length=20,
-            batch_size=None,
-            epochs=100,
-            num_gpus=0,
-            patience_early_stopping=10,
-            early_stop=True,
-            learning_rate=3e-2,
-            auto_lr_find=True,
-            num_workers=3,
-            loss_func='normaldistributionloss',
-            hidden_size=32,
-            rnn_layers=2,
-            dropout=0.1,
+        self,
+        context_length=60,
+        prediction_length=20,
+        batch_size=None,
+        epochs=100,
+        num_gpus=0,
+        patience_early_stopping=10,
+        early_stop=True,
+        learning_rate=3e-2,
+        auto_lr_find=True,
+        num_workers=3,
+        loss_func="normaldistributionloss",
+        hidden_size=32,
+        rnn_layers=2,
+        dropout=0.1,
     ):
 
         self.batch_size = batch_size
@@ -1180,12 +1179,14 @@ class DeepAR():
 
         return model
 
-    def set_auto_batch_epoch(self,
-                             n_data: int,
-                             min_batch: int = 16,
-                             max_batch: int = 256,
-                             min_epoch: int = 40,
-                             max_epoch: int = 400, ):
+    def set_auto_batch_epoch(
+        self,
+        n_data: int,
+        min_batch: int = 16,
+        max_batch: int = 256,
+        min_epoch: int = 40,
+        max_epoch: int = 400,
+    ):
         assert n_data >= 1
         log_data = np.log10(n_data)
         if self.batch_size is None:
@@ -1196,9 +1197,9 @@ class DeepAR():
     def _create_dataset(self, df, freq, valid_p=0.2):
         df = df_utils.check_dataframe(df)
         df = self._handle_missing_data(df, freq)
-        df = df[['ds', 'y']]
-        df['time_idx'] = range(df.shape[0])
-        df['series'] = 0
+        df = df[["ds", "y"]]
+        df["time_idx"] = range(df.shape[0])
+        df["series"] = 0
         self.n_data = df.shape[0]
         self.set_auto_batch_epoch(self.n_data)
 
@@ -1268,11 +1269,9 @@ class DeepAR():
     def _train(self, training, train_dataloader, val_dataloader, hyperparameter_optim=False):
         callbacks = []
         if self.early_stop:
-            early_stop_callback = EarlyStopping(monitor="val_loss",
-                                                min_delta=1e-4,
-                                                patience=self.patience_early_stopping,
-                                                verbose=False,
-                                                mode="min")
+            early_stop_callback = EarlyStopping(
+                monitor="val_loss", min_delta=1e-4, patience=self.patience_early_stopping, verbose=False, mode="min"
+            )
             callbacks = [early_stop_callback]
 
         self.trainer = pl.Trainer(
@@ -1289,10 +1288,11 @@ class DeepAR():
         self.model = self._init_model(training, train_dataloader)
         self.model.set_forecaster(self)
 
-        self.trainer.fit(self.model,
-                         train_dataloader=train_dataloader,
-                         val_dataloaders=val_dataloader,
-                         )
+        self.trainer.fit(
+            self.model,
+            train_dataloader=train_dataloader,
+            val_dataloaders=val_dataloader,
+        )
 
         self.metrics.reset()
         self.val_metrics.reset()
@@ -1326,7 +1326,7 @@ class DeepAR():
         self.model = _init_model(self, train_loader)
 
     def make_future_dataframe(self, df, freq, periods=0, n_historic_predictions=0):
-        '''
+        """
         Creates a dataframe for prediction
         Args:
             periods: number of future periods to forecast
@@ -1334,7 +1334,7 @@ class DeepAR():
 
         Returns:
             future_dataframe: DataFrame, used further for prediction
-        '''
+        """
 
         self.periods = periods
         self.n_historic_predictions = n_historic_predictions
@@ -1363,13 +1363,13 @@ class DeepAR():
         return future_dataframe
 
     def predict(self, future_dataframe):
-        '''
+        """
         Predicts based on the future_dataframe. Should be called only after make_future_dataframe is called
         Args:
             future_dataframe: DataFrame form make_future_dataframe function
         Returns:
             forecast dataframe
-        '''
+        """
 
         if self.fitted is False:
             log.warning("Model has not been fitted. Predictions will be random.")
@@ -1397,9 +1397,9 @@ class DeepAR():
         y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()[0, : new_x["decoder_lengths"][0]]
         y_predicted = y_predicted.detach().numpy()
 
-        future_dataframe.loc[len(future_dataframe) - self.periods:, "y"] = None
+        future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
         future_dataframe["yhat1"] = None
-        future_dataframe.loc[len(future_dataframe) - len(y_predicted):, "yhat1"] = y_predicted
+        future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
         cols = ["ds", "y", "yhat1"]  # cols to keep from df
         df_forecast = pd.concat((future_dataframe[cols],), axis=1)
         df_forecast["residual1"] = df_forecast["yhat1"] - df_forecast["y"]
@@ -1427,31 +1427,3 @@ class DeepAR():
             ylabel=ylabel,
             figsize=figsize,
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
