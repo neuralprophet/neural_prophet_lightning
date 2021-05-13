@@ -7,7 +7,7 @@ import inspect
 import torch
 import math
 
-from neuralprophet import utils_torch
+from neuralprophet.utils import utils_torch
 
 log = logging.getLogger("NP.config")
 
