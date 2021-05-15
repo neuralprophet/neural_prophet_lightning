@@ -1,26 +1,25 @@
 import time
 from collections import OrderedDict
+import logging
 from attrdict import AttrDict
+
 import numpy as np
 import pandas as pd
-
-import torch
-from torch.utils.data import DataLoader
-from torch import optim
-import logging
 from tqdm import tqdm
+import torch
+from torch import optim
+from torch.utils.data import DataLoader
+from pytorch_lightning import Trainer
 
 from neuralprophet import configure
 from neuralprophet import time_net
 from neuralprophet import time_dataset
 from neuralprophet import df_utils
 from neuralprophet import utils
-from neuralprophet import utils_torch
-from neuralprophet.plot_forecast import plot, plot_components
-from neuralprophet.plot_model_parameters import plot_parameters
-from neuralprophet import metrics
-from neuralprophet.utils import set_logger_level
-from pytorch_lightning import Trainer
+from neuralprophet.utils.plot.plot_forecast import plot, plot_components
+from neuralprophet.utils.plot.plot_model_parameters import plot_parameters
+from neuralprophet.utils import metric_tracker
+from neuralprophet.utils.utils import set_logger_level, utils_torch
 
 log = logging.getLogger("NP.forecaster")
 
@@ -34,32 +33,32 @@ class NeuralProphet:
     """
 
     def __init__(
-        self,
-        growth="linear",
-        changepoints=None,
-        n_changepoints=10,
-        changepoints_range=0.9,
-        trend_reg=0,
-        trend_reg_threshold=False,
-        yearly_seasonality="auto",
-        weekly_seasonality="auto",
-        daily_seasonality="auto",
-        seasonality_mode="additive",
-        seasonality_reg=0,
-        n_forecasts=1,
-        n_lags=0,
-        num_hidden_layers=0,
-        d_hidden=None,
-        ar_sparsity=None,
-        learning_rate=None,
-        epochs=None,
-        batch_size=None,
-        loss_func="Huber",
-        optimizer="AdamW",
-        train_speed=None,
-        gpus=None,
-        normalize="auto",
-        impute_missing=True,
+            self,
+            growth="linear",
+            changepoints=None,
+            n_changepoints=10,
+            changepoints_range=0.9,
+            trend_reg=0,
+            trend_reg_threshold=False,
+            yearly_seasonality="auto",
+            weekly_seasonality="auto",
+            daily_seasonality="auto",
+            seasonality_mode="additive",
+            seasonality_reg=0,
+            n_forecasts=1,
+            n_lags=0,
+            num_hidden_layers=0,
+            d_hidden=None,
+            ar_sparsity=None,
+            learning_rate=None,
+            epochs=None,
+            batch_size=None,
+            loss_func="Huber",
+            optimizer="AdamW",
+            train_speed=None,
+            gpus=None,
+            normalize="auto",
+            impute_missing=True,
     ):
         """
         Args:
@@ -151,15 +150,14 @@ class NeuralProphet:
         self.config_train = configure.from_kwargs(configure.Train, kwargs)
         self.gpus = gpus
 
-        self.metrics = metrics.MetricsCollection(
+        self.metrics = metric_tracker.MetricsCollection(
             metrics=[
-                metrics.LossMetric(self.config_train.loss_func),
-                metrics.MAE(),
-                metrics.MSE(),
+                metric_tracker.LossMetric(self.config_train.loss_func),
+                metric_tracker.MAE(),
+                metric_tracker.MSE(),
             ],
             value_metrics=[
-                # metrics.ValueMetric("Loss"),
-                metrics.ValueMetric("RegLoss"),
+                metric_tracker.ValueMetric("RegLoss"),
             ],
         )
 
@@ -531,7 +529,7 @@ class NeuralProphet:
             self.metrics.set_shift_scale((self.data_params["y"].shift, self.data_params["y"].scale))
         if val:
             val_loader = self._init_val_loader(df_val)
-            val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+            val_metrics = metric_tracker.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
             self.val_metrics = val_metrics
 
         ## Run
@@ -556,7 +554,7 @@ class NeuralProphet:
             max_epochs=self.config_train.epochs,
             checkpoint_callback=False,
             logger=False,
-            gpus = self.gpus
+            gpus=self.gpus
         )
 
         if hyperparameter_optim:
@@ -601,7 +599,7 @@ class NeuralProphet:
         Returns:
             df with evaluation metrics
         """
-        test_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+        test_metrics = metric_tracker.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
         if self.highlight_forecast_step_n is not None:
             test_metrics.add_specific_target(target_pos=self.highlight_forecast_step_n - 1)
         ## Run
@@ -676,7 +674,7 @@ class NeuralProphet:
         return folds
 
     def fit(
-        self, df, freq, epochs=None, validate_each_epoch=False, valid_p=0.2, progress_bar=True, plot_live_loss=False
+            self, df, freq, epochs=None, validate_each_epoch=False, valid_p=0.2, progress_bar=True, plot_live_loss=False
     ):
         """Train, and potentially evaluate model.
 
@@ -794,7 +792,7 @@ class NeuralProphet:
         if (n_historic_predictions + n_lags) == 0:
             df = pd.DataFrame(columns=df.columns)
         else:
-            df = df[-(n_lags + n_historic_predictions) :]
+            df = df[-(n_lags + n_historic_predictions):]
 
         if len(df) > 0:
             if len(df.columns) == 1 and "ds" in df:
@@ -1229,14 +1227,14 @@ class NeuralProphet:
         )
 
     def plot_last_forecast(
-        self,
-        fcst,
-        ax=None,
-        xlabel="ds",
-        ylabel="y",
-        figsize=(10, 6),
-        include_previous_forecasts=0,
-        plot_history_data=None,
+            self,
+            fcst,
+            ax=None,
+            xlabel="ds",
+            ylabel="y",
+            figsize=(10, 6),
+            include_previous_forecasts=0,
+            plot_history_data=None,
     ):
         """Plot the NeuralProphet forecast, including history.
 
@@ -1254,9 +1252,9 @@ class NeuralProphet:
         if self.n_lags == 0:
             raise ValueError("Use the standard plot function for models without lags.")
         if plot_history_data is None:
-            fcst = fcst[-(include_previous_forecasts + self.n_forecasts + self.n_lags) :]
+            fcst = fcst[-(include_previous_forecasts + self.n_forecasts + self.n_lags):]
         elif plot_history_data is False:
-            fcst = fcst[-(include_previous_forecasts + self.n_forecasts) :]
+            fcst = fcst[-(include_previous_forecasts + self.n_forecasts):]
         elif plot_history_data is True:
             fcst = fcst
         fcst = utils.fcst_df_to_last_forecast(fcst, n_last=1 + include_previous_forecasts)

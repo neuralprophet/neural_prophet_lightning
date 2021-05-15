@@ -8,14 +8,10 @@ import torch
 from torch.utils.data import DataLoader
 import logging
 from tqdm import tqdm
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import EarlyStopping
 
 from pytorch_forecasting import DeepAR
-from neuralprophet import configure
-from neuralprophet import time_dataset
-from neuralprophet import df_utils
-from neuralprophet import utils
-from neuralprophet import metrics
-from neuralprophet.plot_forecast import plot
 from pytorch_forecasting import TimeSeriesDataSet
 from pytorch_forecasting.data import NaNLabelEncoder
 from pytorch_forecasting.metrics import NormalDistributionLoss
@@ -23,43 +19,46 @@ from pytorch_forecasting.models.nn import HiddenState, MultiEmbedding, get_rnn
 from pytorch_forecasting.utils import apply_to_list, to_list
 from pytorch_forecasting.data.encoders import GroupNormalizer
 
-from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import EarlyStopping
-
-import pytorch_lightning as pl
+from neuralprophet import configure
+from neuralprophet import time_dataset
+from neuralprophet import df_utils
+from neuralprophet import utils
+from neuralprophet.utils import metric_tracker
+from neuralprophet.utils.plot.plot_forecast import plot
 
 log = logging.getLogger("AdditionalModels.forecaster")
 
 
 class LSTM:
-    """LSTM forecaster."""
+    """LSTM forecaster.
+    TODO: Generate description of model specification
+    General LSTM is not a class with function plot with dataframes. (Many comments)
+    It is strange that trainer is a part of LSTM module.
+    """
 
     def __init__(
-        self,
-        n_lags=10,
-        n_forecasts=1,
-        num_hidden_layers=1,
-        d_hidden=10,
-        learning_rate=None,
-        epochs=None,
-        batch_size=None,
-        loss_func="Huber",
-        optimizer="AdamW",
-        train_speed=None,
-        normalize="auto",
-        impute_missing=True,
-        lstm_bias=True,
-        lstm_bidirectional=False,
+            self,
+            n_lags: int = 10,
+            n_forecasts: int = 1,
+            num_hidden_layers: int = 1,
+            d_hidden: int = 10,
+            learning_rate: float = None,
+            epochs: int = None,
+            batch_size: int = None,
+            loss_func: str = "Huber",
+            optimizer: str = "AdamW",
+            train_speed=None,
+            normalize: str = "auto",
+            impute_missing: bool = True,
+            lstm_bias: bool = True,
+            lstm_bidirectional: bool = False,
+            **kwargs
     ):
         """
         Args:
-
-            ## Model Config
             n_forecasts (int): Number of steps ahead of prediction time step to forecast.
             num_hidden_layers (int): number of hidden layer to include in AR-Net. defaults to 0.
             d_hidden (int): dimension of hidden layers of the AR-Net. Ignored if num_hidden_layers == 0.
-
-            ## Train Config
             learning_rate (float): Maximum learning rate setting for 1cycle policy scheduler.
                 default: None: Automatically sets the learning_rate based on a learning rate range test.
                 For manual values, try values ~0.001-10.
@@ -74,21 +73,17 @@ class LSTM:
             loss_func (str, torch.nn.modules.loss._Loss, 'typing.Callable'):
                 Type of loss to use: str ['Huber', 'MSE'],
                 or torch loss or callable for custom loss, eg. asymmetric Huber loss
-
-            ## Data config
             normalize (str): Type of normalization to apply to the time series.
                 options: ['auto', 'soft', 'off', 'minmax, 'standardize']
                 default: 'auto' uses 'minmax' if variable is binary, else 'soft'
                 'soft' scales minimum to 0.1 and the 90th quantile to 0.9
             impute_missing (bool): whether to automatically impute missing dates/values
                 imputation follows a linear method up to 10 missing values, more are filled with trend.
-
-            ## LSTM specific
-            bias (bool): If False, then the layer does not use bias weights b_ih and b_hh. Default: True
-            bidirectional (bool): If True, becomes a bidirectional LSTM. Default: False
+            lstm_bias (bool): If False, then the layer does not use bias weights b_ih and b_hh. Default: True
+            lstm_bidirectional (bool): If True, becomes a bidirectional LSTM. Default: False
 
         """
-
+        #  TODO kwargs could be part of module initializer
         kwargs = locals()
 
         # General
@@ -105,11 +100,11 @@ class LSTM:
         # Training
         self.config_train = configure.from_kwargs(configure.Train, kwargs)
 
-        self.metrics = metrics.MetricsCollection(
+        self.metrics = metric_tracker.MetricsCollection(
             metrics=[
-                metrics.LossMetric(self.config_train.loss_func),
-                metrics.MAE(),
-                metrics.MSE(),
+                metric_tracker.LossMetric(self.config_train.loss_func),
+                metric_tracker.MAE(),
+                metric_tracker.MSE(),
             ],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
@@ -308,7 +303,7 @@ class LSTM:
             self.metrics.set_shift_scale((self.data_params["y"].shift, self.data_params["y"].scale))
         if val:
             val_loader = self._init_val_loader(df_val)
-            val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+            val_metrics = metric_tracker.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
             self.val_metrics = val_metrics
 
@@ -330,7 +325,7 @@ class LSTM:
         if val:
             self.val_metrics.reset()
 
-        self.trainer = Trainer(
+        self.trainer = pl.Trainer(
             max_epochs=self.config_train.epochs,
             checkpoint_callback=False,
             logger=False
@@ -365,7 +360,7 @@ class LSTM:
         Returns:
             df with evaluation metrics
         """
-        test_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+        test_metrics = metric_tracker.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
         if self.highlight_forecast_step_n is not None:
             test_metrics.add_specific_target(target_pos=self.highlight_forecast_step_n - 1)
         ## Run
@@ -438,7 +433,8 @@ class LSTM:
         return folds
 
     def fit(
-        self, df, freq, epochs=None, validate_each_epoch=False, valid_p=0.2, progress_bar=True, plot_live_loss=False
+            self, df: pd.DataFrame, freq: str, epochs: int=None, validate_each_epoch: bool=False,
+            valid_p: float=0.2, progress_bar: str=True, plot_live_loss: str=False
     ):
         """Train, and potentially evaluate model.
 
@@ -542,7 +538,7 @@ class LSTM:
         if (n_historic_predictions + n_lags) == 0:
             df = pd.DataFrame(columns=df.columns)
         else:
-            df = df[-(n_lags + n_historic_predictions) :]
+            df = df[-(n_lags + n_historic_predictions):]
 
         if len(df) > 0:
             if len(df.columns) == 1 and "ds" in df:
@@ -664,25 +660,25 @@ class LSTM:
 
 class NBeatsNP:
     def __init__(
-        self,
-        max_encoder_length=150,
-        batch_size=None,
-        epochs=100,
-        num_gpus=0,
-        patience_early_stopping=10,
-        early_stop=True,
-        weight_decay=1e-2,
-        learning_rate=3e-2,
-        auto_lr_find=True,
-        num_workers=3,
-        loss_func="Huber",
-        from_dataset=True,
-        stack_types=["trend", "seasonality"],
-        num_blocks=[3, 3],
-        num_block_layers=[3, 3],
-        widths=[32, 512],
-        sharing=[True, True],
-        expansion_coefficient_lengths=[3, 7],
+            self,
+            max_encoder_length=150,
+            batch_size=None,
+            epochs=100,
+            num_gpus=0,
+            patience_early_stopping=10,
+            early_stop=True,
+            weight_decay=1e-2,
+            learning_rate=3e-2,
+            auto_lr_find=True,
+            num_workers=3,
+            loss_func="Huber",
+            from_dataset=True,
+            stack_types=["trend", "seasonality"],
+            num_blocks=[3, 3],
+            num_block_layers=[3, 3],
+            widths=[32, 512],
+            sharing=[True, True],
+            expansion_coefficient_lengths=[3, 7],
     ):
         """
         Args:
@@ -762,18 +758,18 @@ class NBeatsNP:
         else:
             raise NotImplementedError("Loss function {} not found".format(self.loss_func))
 
-        self.metrics = metrics.MetricsCollection(
+        self.metrics = metric_tracker.MetricsCollection(
             metrics=[
-                metrics.LossMetric(self.loss_func),
-                metrics.MAE(),
-                metrics.MSE(),
+                metric_tracker.LossMetric(self.loss_func),
+                metric_tracker.MAE(),
+                metric_tracker.MSE(),
             ],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
             ],
         )
 
-        self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+        self.val_metrics = metric_tracker.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
         """
@@ -1060,9 +1056,9 @@ class NBeatsNP:
         y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()[0, : new_x["decoder_lengths"][0]]
         y_predicted = y_predicted.detach().numpy()
 
-        future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
+        future_dataframe.loc[len(future_dataframe) - self.periods:, "y"] = None
         future_dataframe["yhat1"] = None
-        future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
+        future_dataframe.loc[len(future_dataframe) - len(y_predicted):, "yhat1"] = y_predicted
         cols = ["ds", "y", "yhat1"]  # cols to keep from df
         df_forecast = pd.concat((future_dataframe[cols],), axis=1)
         df_forecast["residual1"] = df_forecast["yhat1"] - df_forecast["y"]
@@ -1094,21 +1090,21 @@ class NBeatsNP:
 
 class DeepAR:
     def __init__(
-        self,
-        context_length=60,
-        prediction_length=20,
-        batch_size=None,
-        epochs=100,
-        num_gpus=0,
-        patience_early_stopping=10,
-        early_stop=True,
-        learning_rate=3e-2,
-        auto_lr_find=True,
-        num_workers=3,
-        loss_func="normaldistributionloss",
-        hidden_size=32,
-        rnn_layers=2,
-        dropout=0.1,
+            self,
+            context_length=60,
+            prediction_length=20,
+            batch_size=None,
+            epochs=100,
+            num_gpus=0,
+            patience_early_stopping=10,
+            early_stop=True,
+            learning_rate=3e-2,
+            auto_lr_find=True,
+            num_workers=3,
+            loss_func="normaldistributionloss",
+            hidden_size=32,
+            rnn_layers=2,
+            dropout=0.1,
     ):
 
         self.batch_size = batch_size
@@ -1149,18 +1145,18 @@ class DeepAR:
         else:
             raise NotImplementedError("Loss function {} not found".format(self.loss_func))
 
-        self.metrics = metrics.MetricsCollection(
+        self.metrics = metric_tracker.MetricsCollection(
             metrics=[
-                metrics.LossMetric(torch.nn.SmoothL1Loss()),
-                metrics.MAE(),
-                metrics.MSE(),
+                metric_tracker.LossMetric(torch.nn.SmoothL1Loss()),
+                metric_tracker.MAE(),
+                metric_tracker.MSE(),
             ],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
             ],
         )
 
-        self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
+        self.val_metrics = metric_tracker.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
         model = DeepARBase.from_dataset(
@@ -1180,12 +1176,12 @@ class DeepAR:
         return model
 
     def set_auto_batch_epoch(
-        self,
-        n_data: int,
-        min_batch: int = 16,
-        max_batch: int = 256,
-        min_epoch: int = 40,
-        max_epoch: int = 400,
+            self,
+            n_data: int,
+            min_batch: int = 16,
+            max_batch: int = 256,
+            min_epoch: int = 40,
+            max_epoch: int = 400,
     ):
         assert n_data >= 1
         log_data = np.log10(n_data)
@@ -1397,9 +1393,9 @@ class DeepAR:
         y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()[0, : new_x["decoder_lengths"][0]]
         y_predicted = y_predicted.detach().numpy()
 
-        future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
+        future_dataframe.loc[len(future_dataframe) - self.periods:, "y"] = None
         future_dataframe["yhat1"] = None
-        future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
+        future_dataframe.loc[len(future_dataframe) - len(y_predicted):, "yhat1"] = y_predicted
         cols = ["ds", "y", "yhat1"]  # cols to keep from df
         df_forecast = pd.concat((future_dataframe[cols],), axis=1)
         df_forecast["residual1"] = df_forecast["yhat1"] - df_forecast["y"]

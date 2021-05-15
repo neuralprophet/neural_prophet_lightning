@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 import logging
-from neuralprophet.utils import (
+from neuralprophet.utils.utils import (
     season_config_to_model_dims,
     regressors_config_to_model_dims,
     events_config_to_model_dims,
