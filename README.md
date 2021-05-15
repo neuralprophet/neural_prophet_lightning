@@ -136,6 +136,20 @@ An example output of this function looks as follows:
 ```
 It can be used further directly into NeuralProphet configuration initialization.
 
+# LIBRA benchmarking
+
+In order to run the benchmarking the dataset should be downloaded.
+It is publicly available at [Zenodo](http://doi.org/10.5281/zenodo.4399959).
+The easiest way to download it is via `zenodo-get`.
+
+First, you need to install it via the following command:
+```pip3 install zenodo_get```
+Further, to download this particular dataset use the following command line:
+```zenodo_get 10.5281/zenodo.4399959```
+
+
+
+
 ## Repository structure:
 In this work we follow the original repository structure of NeuralProphet in order to preserve the existing functionality.
 Here we present the structure of repository and the files which were changed or added in the process of out project.
