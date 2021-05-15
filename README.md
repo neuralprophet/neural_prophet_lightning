@@ -143,9 +143,14 @@ It is publicly available at [Zenodo](http://doi.org/10.5281/zenodo.4399959).
 The easiest way to download it is via `zenodo-get`.
 
 First, you need to install it via the following command:
+
 ```pip3 install zenodo_get```
+
 Further, to download this particular dataset use the following command line:
+
 ```zenodo_get 10.5281/zenodo.4399959```
+
+It contains 400 time series from four domains: economics, finance, human, or nature.
 
 
 
