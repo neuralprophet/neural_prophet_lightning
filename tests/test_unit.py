@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 import logging
 from neuralprophet import (
     NeuralProphet,
-    df_utils,
-    time_dataset,
-    configure,
 )
+from neuralprophet.dataset import time_dataset
+from neuralprophet.utils import df_utils
+from neuralprophet.tools import configure
 
 log = logging.getLogger("NP.test")
 log.setLevel("WARNING")

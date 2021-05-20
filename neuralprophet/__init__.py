@@ -22,5 +22,4 @@ warnings_log.addHandler(c_handler)
 warnings_log.addHandler(f_handler)
 
 from .forecaster import NeuralProphet
-from .utils import set_random_seed, set_log_level
-from .df_utils import split_df
+from neuralprophet.utils.df_utils import split_df

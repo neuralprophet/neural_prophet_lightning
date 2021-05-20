@@ -1,4 +1,6 @@
-from neuralprophet.additional_models import LightLSTM, NBeats, DeepARBase
+from neuralprophet.models.LSTM import LightLSTM
+from neuralprophet.models.NBeats import LightNBeats
+from neuralprophet.models.DeepAR import LightDeepAR
 import time
 
 import numpy as np
@@ -9,18 +11,14 @@ from torch.utils.data import DataLoader
 import logging
 from tqdm import tqdm
 
-from pytorch_forecasting import DeepAR
-from neuralprophet import configure
-from neuralprophet import time_dataset
-from neuralprophet import df_utils
-from neuralprophet import utils
-from neuralprophet import metrics
-from neuralprophet.plot_forecast import plot
+from neuralprophet.utils import df_utils
+from neuralprophet.tools import configure, metrics
+from neuralprophet.dataset import time_dataset
+from neuralprophet.utils import utils
+from neuralprophet.tools.plot_forecast import plot
 from pytorch_forecasting import TimeSeriesDataSet
 from pytorch_forecasting.data import NaNLabelEncoder
 from pytorch_forecasting.metrics import NormalDistributionLoss
-from pytorch_forecasting.models.nn import HiddenState, MultiEmbedding, get_rnn
-from pytorch_forecasting.utils import apply_to_list, to_list
 from pytorch_forecasting.data.encoders import GroupNormalizer
 
 from pytorch_lightning import Trainer
@@ -785,7 +783,7 @@ class NBeatsNP:
             model: pytorch lightning model
         """
         if self.from_dataset:
-            model = NBeats.from_dataset(
+            model = LightNBeats.from_dataset(
                 training,
                 learning_rate=self.learning_rate,
                 log_gradient_flow=False,
@@ -793,7 +791,7 @@ class NBeatsNP:
             )
         else:
             config = self.config_params_NBeats
-            model = NBeats.from_dataset(
+            model = LightNBeats.from_dataset(
                 training,
                 learning_rate=self.learning_rate,
                 log_gradient_flow=False,
@@ -1163,7 +1161,7 @@ class DeepAR:
         self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
-        model = DeepARBase.from_dataset(
+        model = LightDeepAR.from_dataset(
             training,
             learning_rate=self.learning_rate,
             hidden_size=self.hidden_size,

@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, Subset
 import inspect
 from torch_lr_finder import LRFinder
 
-from neuralprophet import utils
+from neuralprophet.utils import utils
 
 log = logging.getLogger("NP.utils_torch")
 
