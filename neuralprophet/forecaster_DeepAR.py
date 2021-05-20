@@ -1,4 +1,4 @@
-from neuralprophet.models.TFT import LightTFT
+from neuralprophet.models.DeepAR import LightDeepAR
 
 import numpy as np
 import pandas as pd
@@ -6,28 +6,27 @@ import pandas as pd
 import torch
 import logging
 
-
 from neuralprophet.utils import df_utils
 from neuralprophet.tools import metrics
+
 from neuralprophet.tools.plot_forecast import plot
 from pytorch_forecasting import TimeSeriesDataSet
 from pytorch_forecasting.data import NaNLabelEncoder
-from pytorch_forecasting.metrics import QuantileLoss
-
+from pytorch_forecasting.metrics import NormalDistributionLoss
 from pytorch_forecasting.data.encoders import GroupNormalizer
 
 from pytorch_lightning.callbacks import EarlyStopping
 
 import pytorch_lightning as pl
 
-log = logging.getLogger("AdditionalModels.TFT")
+log = logging.getLogger("AdditionalModels.DeepAR")
 
 
-class TemporalFusionTransformerNP:
+class DeepAR:
     def __init__(
         self,
         context_length=60,
-        output_size=20,
+        prediction_length=20,
         batch_size=None,
         epochs=100,
         num_gpus=0,
@@ -36,11 +35,9 @@ class TemporalFusionTransformerNP:
         learning_rate=3e-2,
         auto_lr_find=True,
         num_workers=3,
-        loss_func="QuantileLoss",
+        loss_func="normaldistributionloss",
         hidden_size=32,
-        attention_head_size=1,
-        hidden_continuous_size=8,
-        # rnn_layers=2,
+        rnn_layers=2,
         dropout=0.1,
     ):
 
@@ -55,12 +52,10 @@ class TemporalFusionTransformerNP:
         self.num_workers = num_workers
 
         self.context_length = context_length
-        self.output_size = output_size
+        self.prediction_length = prediction_length
 
         self.hidden_size = hidden_size
-        # self.rnn_layers = rnn_layers
-        self.attention_head_size = attention_head_size
-        self.hidden_continuous_size = hidden_continuous_size
+        self.rnn_layers = rnn_layers
         self.dropout = dropout
         self.loss_func = loss_func
 
@@ -73,8 +68,8 @@ class TemporalFusionTransformerNP:
                 self.loss_func = torch.nn.L1Loss()
             elif self.loss_func.lower() in ["mse", "mseloss", "l2", "l2loss"]:
                 self.loss_func = torch.nn.MSELoss()
-            elif self.loss_func.lower() in ["quantileloss"]:
-                self.loss_func = QuantileLoss()
+            elif self.loss_func.lower() in ["normaldistloss", "ndl", "normaldistributionloss"]:
+                self.loss_func = NormalDistributionLoss()
             else:
                 raise NotImplementedError("Loss function {} name not defined".format(self.loss_func))
         elif callable(self.loss_func):
@@ -94,14 +89,12 @@ class TemporalFusionTransformerNP:
         self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
-
-        model = LightTFT.from_dataset(
+        model = LightDeepAR.from_dataset(
             training,
             learning_rate=self.learning_rate,
             hidden_size=self.hidden_size,
-            attention_head_size=self.attention_head_size,
+            rnn_layers=self.rnn_layers,
             dropout=self.dropout,
-            hidden_continuous_size=self.hidden_continuous_size,
             loss=self.loss_func,
         )
 
@@ -133,8 +126,6 @@ class TemporalFusionTransformerNP:
 
         training_cutoff = df.shape[0] - int(valid_p * df.shape[0])
 
-        # max_encoder_length = 36
-
         training = TimeSeriesDataSet(
             df.iloc[:training_cutoff],
             time_idx="time_idx",
@@ -143,15 +134,13 @@ class TemporalFusionTransformerNP:
             group_ids=["series"],
             min_encoder_length=self.context_length,
             max_encoder_length=self.context_length,
-            max_prediction_length=self.output_size,
-            min_prediction_length=1,
-            time_varying_known_reals=["time_idx"],
+            max_prediction_length=self.prediction_length,
+            min_prediction_length=self.prediction_length,
             time_varying_unknown_reals=["y"],
-            target_normalizer=GroupNormalizer(groups=["series"], transformation="softplus", center=False),
-            # randomize_length=None,
-            add_relative_time_idx=True,
-            add_target_scales=True,
-            add_encoder_length=True,
+            target_normalizer=GroupNormalizer(groups=["series"]),
+            randomize_length=None,
+            add_relative_time_idx=False,
+            add_target_scales=False,
         )
 
         validation = TimeSeriesDataSet.from_dataset(training, df, min_prediction_idx=training_cutoff)
@@ -162,10 +151,12 @@ class TemporalFusionTransformerNP:
 
     def _handle_missing_data(sefl, df, freq, predicting=False):
         """Checks, auto-imputes and normalizes new data
+
         Args:
             df (pd.DataFrame): raw data with columns 'ds' and 'y'
             freq (str): data frequency
             predicting (bool): when no lags, allow NA values in 'y' of forecast series or 'y' to miss completely
+
         Returns:
             pre-processed df
         """
@@ -242,7 +233,6 @@ class TemporalFusionTransformerNP:
     def fit(self, df, freq, valid_p=0.2):
 
         training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
-        # print(next(iter(train_dataloader)))
         metrics_df = self._train(training, train_dataloader, val_dataloader)
         return metrics_df
 
@@ -257,6 +247,7 @@ class TemporalFusionTransformerNP:
         Args:
             periods: number of future periods to forecast
             n_historic_predictions: number of historic_predictions to include in forecast
+
         Returns:
             future_dataframe: DataFrame, used further for prediction
         """
@@ -311,13 +302,11 @@ class TemporalFusionTransformerNP:
             max_encoder_length=self.context_length,
             max_prediction_length=self.periods + self.n_historic_predictions,
             min_prediction_length=self.periods + self.n_historic_predictions,
-            time_varying_known_reals=["time_idx"],
             time_varying_unknown_reals=["y"],
-            target_normalizer=GroupNormalizer(groups=["series"], transformation="softplus", center=False),
+            target_normalizer=GroupNormalizer(groups=["series"]),
             randomize_length=None,
-            add_relative_time_idx=True,
-            add_target_scales=True,
-            add_encoder_length=True,
+            add_relative_time_idx=False,
+            add_target_scales=False,
         )
 
         new_raw_predictions, new_x = self.model.predict(testing, mode="raw", return_x=True)
@@ -335,12 +324,14 @@ class TemporalFusionTransformerNP:
 
     def plot(self, fcst, ax=None, xlabel="ds", ylabel="y", figsize=(10, 6)):
         """Plot the NeuralProphet forecast, including history.
+
         Args:
             fcst (pd.DataFrame): output of self.predict.
             ax (matplotlib axes): Optional, matplotlib axes on which to plot.
             xlabel (string): label name on X-axis
             ylabel (string): label name on Y-axis
             figsize (tuple):   width, height in inches. default: (10, 6)
+
         Returns:
             A matplotlib figure.
         """

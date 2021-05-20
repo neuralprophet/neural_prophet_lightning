@@ -1,4 +1,4 @@
-from neuralprophet.models.TFT import LightTFT
+from neuralprophet.models.NBeats import LightNBeats
 
 import numpy as np
 import pandas as pd
@@ -6,64 +6,102 @@ import pandas as pd
 import torch
 import logging
 
-
 from neuralprophet.utils import df_utils
 from neuralprophet.tools import metrics
+
 from neuralprophet.tools.plot_forecast import plot
 from pytorch_forecasting import TimeSeriesDataSet
 from pytorch_forecasting.data import NaNLabelEncoder
-from pytorch_forecasting.metrics import QuantileLoss
-
-from pytorch_forecasting.data.encoders import GroupNormalizer
 
 from pytorch_lightning.callbacks import EarlyStopping
 
 import pytorch_lightning as pl
 
-log = logging.getLogger("AdditionalModels.TFT")
+log = logging.getLogger("AdditionalModels.NBeats")
 
 
-class TemporalFusionTransformerNP:
+class NBeatsNP:
     def __init__(
         self,
-        context_length=60,
-        output_size=20,
+        max_encoder_length=150,
         batch_size=None,
         epochs=100,
         num_gpus=0,
         patience_early_stopping=10,
         early_stop=True,
+        weight_decay=1e-2,
         learning_rate=3e-2,
         auto_lr_find=True,
         num_workers=3,
-        loss_func="QuantileLoss",
-        hidden_size=32,
-        attention_head_size=1,
-        hidden_continuous_size=8,
-        # rnn_layers=2,
-        dropout=0.1,
+        loss_func="Huber",
+        from_dataset=True,
+        stack_types=["trend", "seasonality"],
+        num_blocks=[3, 3],
+        num_block_layers=[3, 3],
+        widths=[32, 512],
+        sharing=[True, True],
+        expansion_coefficient_lengths=[3, 7],
     ):
+        """
+        Args:
+            max_encoder_length: int, — Number of time units that condition the predictions. Also known as 'lookback period'.
+                Should be between 1-10 times the prediction length. Can be seen as equivalent for n_lags in NP
+            batch_size: int, — batch_size. If set to None, automatic batch size will be set
+            epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
+            num_gpus: int, — number of gpus to use
+            patience_early_stopping: int, — patience parameter of EarlyStopping callback
+            early_stop: bool, — whether to use EarlyStopping callback
+            weight_decay: float, — weight_decay parameter for NBeats model
+            learning_rate: float, — learning rate for the model. Will be overwritten, if auto_lr_find is used
+            auto_lr_find: bool, — whether to use automatic laerning rate finder
+            num_workers: int, — number of workers for DataLoaders
+            loss_func: str, ['Huber', 'MSE'] — what loss function will be used
+            from_dataset bool: whether to initialize parameters automatically based on dataset, or used custom
+            stack_types: One of the following values: “generic”, “seasonality" or “trend". A list of strings
+                of length 1 or ‘num_stacks’. Default and recommended value
+                for generic mode: [“generic”] Recommended value for interpretable mode: [“trend”,”seasonality”]
+            num_blocks: The number of blocks per stack. A list of ints of length 1 or ‘num_stacks’.
+                Default and recommended value for generic mode: [1] Recommended value for interpretable mode: [3]
+            num_block_layers: Number of fully connected layers with ReLu activation per block. A list of ints of length
+                1 or ‘num_stacks’.
+                Default and recommended value for generic mode: [4] Recommended value for interpretable mode: [4]
+            width: Widths of the fully connected layers with ReLu activation in the blocks.
+                A list of ints of length 1 or ‘num_stacks’. Default and recommended value for generic mode: [512]
+                Recommended value for interpretable mode: [256, 2048]
+            sharing: Whether the weights are shared with the other blocks per stack.
+                A list of ints of length 1 or ‘num_stacks’. Default and recommended value for generic mode: [False]
+                Recommended value for interpretable mode: [True]
+            expansion_coefficient_length: If the type is “G” (generic), then the length of the expansion
+                coefficient.
+                If type is “T” (trend), then it corresponds to the degree of the polynomial. If the type is “S”
+                (seasonal) then this is the minimum period allowed, e.g. 2 for changes every timestep.
+                A list of ints of length 1 or ‘num_stacks’. Default value for generic mode: [32] Recommended value for
+                interpretable mode: [3]
+        """
 
         self.batch_size = batch_size
 
+        self.config_params_NBeats = {
+            "stack_types": stack_types,
+            "num_blocks": num_blocks,
+            "num_block_layers": num_block_layers,
+            "widths": widths,
+            "sharing": sharing,
+            "expansion_coefficient_length": expansion_coefficient_lengths,
+        }
+
+        self.max_encoder_length = max_encoder_length
+        self.from_dataset = from_dataset
         self.epochs = epochs
         self.num_gpus = num_gpus
         self.patience_early_stopping = patience_early_stopping
         self.early_stop = early_stop
+        self.weight_decay = weight_decay
         self.learning_rate = learning_rate
         self.auto_lr_find = auto_lr_find
         self.num_workers = num_workers
 
-        self.context_length = context_length
-        self.output_size = output_size
-
-        self.hidden_size = hidden_size
-        # self.rnn_layers = rnn_layers
-        self.attention_head_size = attention_head_size
-        self.hidden_continuous_size = hidden_continuous_size
-        self.dropout = dropout
         self.loss_func = loss_func
-
         self.fitted = False
 
         if type(self.loss_func) == str:
@@ -73,8 +111,6 @@ class TemporalFusionTransformerNP:
                 self.loss_func = torch.nn.L1Loss()
             elif self.loss_func.lower() in ["mse", "mseloss", "l2", "l2loss"]:
                 self.loss_func = torch.nn.MSELoss()
-            elif self.loss_func.lower() in ["quantileloss"]:
-                self.loss_func = QuantileLoss()
             else:
                 raise NotImplementedError("Loss function {} name not defined".format(self.loss_func))
         elif callable(self.loss_func):
@@ -85,7 +121,7 @@ class TemporalFusionTransformerNP:
             raise NotImplementedError("Loss function {} not found".format(self.loss_func))
 
         self.metrics = metrics.MetricsCollection(
-            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(),],
+            metrics=[metrics.LossMetric(self.loss_func), metrics.MAE(), metrics.MSE(),],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
             ],
@@ -94,27 +130,46 @@ class TemporalFusionTransformerNP:
         self.val_metrics = metrics.MetricsCollection([m.new() for m in self.metrics.batch_metrics])
 
     def _init_model(self, training, train_dataloader):
+        """
+        Args:
+            training: TimeSeriesDataset, used to generate model from_dataset
+            train_dataloader: train DataLoader, used to find LR if needed
 
-        model = LightTFT.from_dataset(
-            training,
-            learning_rate=self.learning_rate,
-            hidden_size=self.hidden_size,
-            attention_head_size=self.attention_head_size,
-            dropout=self.dropout,
-            hidden_continuous_size=self.hidden_continuous_size,
-            loss=self.loss_func,
-        )
+        Returns:
+            model: pytorch lightning model
+        """
+        if self.from_dataset:
+            model = LightNBeats.from_dataset(
+                training, learning_rate=self.learning_rate, log_gradient_flow=False, weight_decay=self.weight_decay,
+            )
+        else:
+            config = self.config_params_NBeats
+            model = LightNBeats.from_dataset(
+                training,
+                learning_rate=self.learning_rate,
+                log_gradient_flow=False,
+                weight_decay=self.weight_decay,
+                **config,
+            )
 
         if self.auto_lr_find:
             res = self.trainer.tuner.lr_find(model, train_dataloader=train_dataloader, min_lr=1e-5, max_lr=1e2)
+
             model.hparams.learning_rate = res.suggestion()
             self.learning_rate = res.suggestion()
 
         return model
 
-    def set_auto_batch_epoch(
-        self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
-    ):
+    def set_auto_batch_epoch(self, n_data: int, min_batch: int = 16, max_batch: int = 256):
+        """
+        Args:
+            n_data: length of time series
+            min_batch: min batch size allowed
+            max_batch: max batch size allowed
+
+        Returns:
+            self.batch_size is set
+        """
         assert n_data >= 1
         log_data = np.log10(n_data)
         if self.batch_size is None:
@@ -122,50 +177,14 @@ class TemporalFusionTransformerNP:
             self.batch_size = min(max_batch, max(min_batch, self.batch_size))
             self.batch_size = min(n_data, self.batch_size)
 
-    def _create_dataset(self, df, freq, valid_p=0.2):
-        df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
-        df = df[["ds", "y"]]
-        df["time_idx"] = range(df.shape[0])
-        df["series"] = 0
-        self.n_data = df.shape[0]
-        self.set_auto_batch_epoch(self.n_data)
-
-        training_cutoff = df.shape[0] - int(valid_p * df.shape[0])
-
-        # max_encoder_length = 36
-
-        training = TimeSeriesDataSet(
-            df.iloc[:training_cutoff],
-            time_idx="time_idx",
-            target="y",
-            categorical_encoders={"series": NaNLabelEncoder().fit(df.series)},
-            group_ids=["series"],
-            min_encoder_length=self.context_length,
-            max_encoder_length=self.context_length,
-            max_prediction_length=self.output_size,
-            min_prediction_length=1,
-            time_varying_known_reals=["time_idx"],
-            time_varying_unknown_reals=["y"],
-            target_normalizer=GroupNormalizer(groups=["series"], transformation="softplus", center=False),
-            # randomize_length=None,
-            add_relative_time_idx=True,
-            add_target_scales=True,
-            add_encoder_length=True,
-        )
-
-        validation = TimeSeriesDataSet.from_dataset(training, df, min_prediction_idx=training_cutoff)
-        train_dataloader = training.to_dataloader(train=True, batch_size=self.batch_size, num_workers=self.num_workers)
-        val_dataloader = validation.to_dataloader(train=False, batch_size=self.batch_size, num_workers=self.num_workers)
-
-        return training, train_dataloader, val_dataloader
-
     def _handle_missing_data(sefl, df, freq, predicting=False):
         """Checks, auto-imputes and normalizes new data
+
         Args:
             df (pd.DataFrame): raw data with columns 'ds' and 'y'
             freq (str): data frequency
             predicting (bool): when no lags, allow NA values in 'y' of forecast series or 'y' to miss completely
+
         Returns:
             pre-processed df
         """
@@ -194,7 +213,70 @@ class TemporalFusionTransformerNP:
                     )
         return df
 
+    def _create_dataset(self, df, freq, valid_p):
+        """
+        Args:
+            df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
+            freq: str — Data step sizes. Frequency of data recording,
+                Any valid frequency for pd.date_range, such as '5min', 'D' or 'MS'
+            valid_p: validation percentage. By default 0.2
+
+        Returns:
+            training: TimeSeriesDataset with training data
+            train_dataloader: train DataLoader
+            val_dataloader: validation DataLoader
+
+        """
+        df = df_utils.check_dataframe(df)
+        df = self._handle_missing_data(df, freq)
+        df = df[["ds", "y"]]
+        df["time_idx"] = range(df.shape[0])
+        df["series"] = 0
+        self.n_data = df.shape[0]
+        if type(self.batch_size) == type(None):
+            self.set_auto_batch_epoch(self.n_data)
+
+        max_prediction_length = int(valid_p * df.shape[0])
+        training_cutoff = df.shape[0] - int(valid_p * df.shape[0])
+
+        self.context_length = self.max_encoder_length
+        self.prediction_length = max_prediction_length
+
+        training = TimeSeriesDataSet(
+            df.iloc[:training_cutoff],
+            time_idx="time_idx",
+            target="y",
+            categorical_encoders={"series": NaNLabelEncoder().fit(df.series)},
+            group_ids=["series"],
+            min_encoder_length=self.context_length,
+            max_encoder_length=self.context_length,
+            max_prediction_length=self.prediction_length,
+            min_prediction_length=self.prediction_length,
+            time_varying_unknown_reals=["y"],
+            randomize_length=None,
+            add_relative_time_idx=False,
+            add_target_scales=False,
+        )
+
+        validation = TimeSeriesDataSet.from_dataset(training, df, min_prediction_idx=training_cutoff)
+
+        train_dataloader = training.to_dataloader(train=True, batch_size=self.batch_size, num_workers=self.num_workers)
+        val_dataloader = validation.to_dataloader(train=False, batch_size=self.batch_size, num_workers=self.num_workers)
+
+        return training, train_dataloader, val_dataloader
+
     def _train(self, training, train_dataloader, val_dataloader, hyperparameter_optim=False):
+        """
+        Args:
+            training: TimeSeriesDataset with training data
+            train_dataloader: train DataLoader
+            val_dataloader: validation DataLoader
+            hyperparameter_optim: whether the function is called for hyperparameter optim or not
+
+        Returns:
+            metrics_df: dataframe with training loss per epoch
+            model: if hyperparameter_optim = True, the initialized model is returned
+        """
         callbacks = []
         if self.early_stop:
             early_stop_callback = EarlyStopping(
@@ -210,15 +292,10 @@ class TemporalFusionTransformerNP:
             callbacks=callbacks,
             checkpoint_callback=False,
             logger=False,
-            num_sanity_val_steps=0,
         )
 
         self.model = self._init_model(training, train_dataloader)
         self.model.set_forecaster(self)
-
-        self.trainer.fit(
-            self.model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader,
-        )
 
         self.metrics.reset()
         self.val_metrics.reset()
@@ -240,9 +317,18 @@ class TemporalFusionTransformerNP:
             return metrics_df
 
     def fit(self, df, freq, valid_p=0.2):
+        """
+        Args:
+            df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
+            freq: str — Data step sizes. Frequency of data recording,
+                Any valid frequency for pd.date_range, such as '5min', 'D' or 'MS'
+            valid_p: validation percentage. By default 0.2
+
+        Returns:
+            metrics_df: dataframe with training loss per epoch
+        """
 
         training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
-        # print(next(iter(train_dataloader)))
         metrics_df = self._train(training, train_dataloader, val_dataloader)
         return metrics_df
 
@@ -257,6 +343,7 @@ class TemporalFusionTransformerNP:
         Args:
             periods: number of future periods to forecast
             n_historic_predictions: number of historic_predictions to include in forecast
+
         Returns:
             future_dataframe: DataFrame, used further for prediction
         """
@@ -273,7 +360,7 @@ class TemporalFusionTransformerNP:
         df["series"] = 0
         self.n_data = df.shape[0]
 
-        encoder_data = df[lambda x: x.time_idx > x.time_idx.max() - (self.context_length + n_historic_predictions)]
+        encoder_data = df[lambda x: x.time_idx > x.time_idx.max() - (self.max_encoder_length + n_historic_predictions)]
         last_data = df[lambda x: x.time_idx == x.time_idx.max()]
         decoder_data = pd.concat(
             [last_data.assign(ds=lambda x: x.ds + pd.offsets.MonthBegin(i)) for i in range(1, periods + 1)],
@@ -300,7 +387,6 @@ class TemporalFusionTransformerNP:
             log.warning("Model has not been fitted. Predictions will be random.")
 
         future_dataframe = future_dataframe.copy(deep=True)
-
         testing = TimeSeriesDataSet(
             future_dataframe,
             time_idx="time_idx",
@@ -311,13 +397,10 @@ class TemporalFusionTransformerNP:
             max_encoder_length=self.context_length,
             max_prediction_length=self.periods + self.n_historic_predictions,
             min_prediction_length=self.periods + self.n_historic_predictions,
-            time_varying_known_reals=["time_idx"],
             time_varying_unknown_reals=["y"],
-            target_normalizer=GroupNormalizer(groups=["series"], transformation="softplus", center=False),
             randomize_length=None,
-            add_relative_time_idx=True,
-            add_target_scales=True,
-            add_encoder_length=True,
+            add_relative_time_idx=False,
+            add_target_scales=False,
         )
 
         new_raw_predictions, new_x = self.model.predict(testing, mode="raw", return_x=True)
@@ -335,12 +418,14 @@ class TemporalFusionTransformerNP:
 
     def plot(self, fcst, ax=None, xlabel="ds", ylabel="y", figsize=(10, 6)):
         """Plot the NeuralProphet forecast, including history.
+
         Args:
             fcst (pd.DataFrame): output of self.predict.
             ax (matplotlib axes): Optional, matplotlib axes on which to plot.
             xlabel (string): label name on X-axis
             ylabel (string): label name on Y-axis
             figsize (tuple):   width, height in inches. default: (10, 6)
+
         Returns:
             A matplotlib figure.
         """

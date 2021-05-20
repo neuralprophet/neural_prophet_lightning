@@ -19,11 +19,11 @@ class LightTFT(TemporalFusionTransformer):
         """
         x, y = batch
         log, out = self.step(x, y, batch_idx)
-        #y_hat = out['prediction']
+        # y_hat = out['prediction']
         y_hat = self.to_prediction(out)
         y = y[0]
-        #print('y_hat', y_hat.shape)
-        #print('y', y.shape)
+        # print('y_hat', y_hat.shape)
+        # print('y', y.shape)
         self.log("train_loss", log["loss"], on_step=True, on_epoch=True, prog_bar=True)
         if type(self.forecaster) != type(None):
             self.forecaster.metrics.update(predicted=y_hat.detach(), target=y.detach(), values={"Loss": log["loss"]})

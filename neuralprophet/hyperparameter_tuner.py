@@ -4,7 +4,7 @@ from ray import tune
 from ray.tune import CLIReporter
 import pytorch_lightning as pl
 
-from neuralprophet.forecaster_additional_models import LSTM
+from neuralprophet.forecaster_LSTM import LSTM
 from neuralprophet import NeuralProphet
 
 
