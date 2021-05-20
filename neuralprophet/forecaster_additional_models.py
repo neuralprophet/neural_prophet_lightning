@@ -18,7 +18,7 @@ from neuralprophet import metrics
 from neuralprophet.plot_forecast import plot
 from pytorch_forecasting import TimeSeriesDataSet
 from pytorch_forecasting.data import NaNLabelEncoder
-from pytorch_forecasting.metrics import NormalDistributionLoss
+from pytorch_forecasting.metrics import NormalDistributionLoss, QuantileLoss
 from pytorch_forecasting.models.nn import HiddenState, MultiEmbedding, get_rnn
 from pytorch_forecasting.utils import apply_to_list, to_list
 from pytorch_forecasting.data.encoders import GroupNormalizer
