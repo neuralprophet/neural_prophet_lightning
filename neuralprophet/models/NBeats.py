@@ -21,7 +21,7 @@ class LightNBeats(NBeats):
         y = y[0]
 
         # log loss
-        assert len(log["loss"].size()) >= 1
+        # assert len(log["loss"].size()) >= 1
 
         self.log("train_loss", log["loss"], on_step=True, on_epoch=True, prog_bar=True)
         if type(self.forecaster) != type(None):
@@ -36,8 +36,8 @@ class LightNBeats(NBeats):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        log, y_hat = self.step(x, y, batch_idx)  # log loss
-        y_hat = y_hat['prediction'][0]
+        log, out = self.step(x, y, batch_idx)  # log loss
+        y_hat = self.to_prediction(out)
         y = y[0]
 
         self.log("val_loss", log["loss"], on_step=False, on_epoch=True, prog_bar=True)

@@ -165,10 +165,7 @@ def tune_hyperparameters(
         if mode == "auto":
             config = {
                 "learning_rate": tune.loguniform(1e-4, 1e-1),
-                "max_encoder_length": tune.choice([10, 30, 100]),
-                # "from_dataset": tune.choice([False, True]),
-                "weight_decay": tune.loguniform(1e-4, 1e-1),
-                "loss_func": tune.choice(['Huber', 'MSE']),
+                "context_length": tune.choice([30, 100]),
             }
 
     elif model_name == "TFT":

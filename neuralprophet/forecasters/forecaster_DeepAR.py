@@ -249,8 +249,10 @@ class DeepAR:
         """
 
         self.periods = periods
-        self.n_historic_predictions = n_historic_predictions
 
+        if n_historic_predictions == True:
+            n_historic_predictions = len(df)-self.context_length
+        self.n_historic_predictions = n_historic_predictions
         df = df.copy(deep=True)
 
         df = df_utils.check_dataframe(df)
@@ -261,17 +263,20 @@ class DeepAR:
         self.n_data = df.shape[0]
 
         encoder_data = df[lambda x: x.time_idx > x.time_idx.max() - (self.context_length + n_historic_predictions)]
-        last_data = df[lambda x: x.time_idx == x.time_idx.max()]
-        decoder_data = pd.concat(
-            [last_data.assign(ds=lambda x: x.ds + pd.offsets.MonthBegin(i)) for i in range(1, periods + 1)],
-            ignore_index=True,
-        )
-        decoder_data["time_idx"] = range(
-            decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
-        )
-        decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=freq)[1:]
-        future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
-
+        print(encoder_data, periods)
+        if periods != 0:
+            last_data = df[lambda x: x.time_idx == x.time_idx.max()]
+            decoder_data = pd.concat(
+                [last_data.assign(ds=lambda x: x.ds + pd.offsets.MonthBegin(i)) for i in range(1, periods + 1)],
+                ignore_index=True,
+            )
+            decoder_data["time_idx"] = range(
+                decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
+            )
+            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=freq)[1:]
+            future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
+        elif periods == 0:
+            future_dataframe = encoder_data
         return future_dataframe
 
     def predict(self, future_dataframe):
