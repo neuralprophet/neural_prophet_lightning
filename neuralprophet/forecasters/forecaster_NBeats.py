@@ -246,11 +246,43 @@ class NBeats:
             future_dataframe: DataFrame, used further for prediction
         """
 
+
+
+        if isinstance(n_historic_predictions, bool):
+            if n_historic_predictions:
+                n_historic_predictions = len(df) - self.context_length
+            else:
+                n_historic_predictions = 0
+        elif not isinstance(n_historic_predictions, int):
+            log.error("non-integer value for n_historic_predictions set to zero.")
+            n_historic_predictions = 0
+        if periods == 0 and n_historic_predictions == 0:
+            raise ValueError("Set either history or future to contain more than zero values.")
+
+
+        if len(df) < self.context_length:
+            raise ValueError("Insufficient data for a prediction")
+        elif len(df) < self.context_length + n_historic_predictions:
+            log.warning(
+                "Insufficient data for {} historic forecasts, reduced to {}.".format(
+                    n_historic_predictions, len(df) - self.context_length
+                )
+            )
+            n_historic_predictions = len(df) - self.context_length
+
+        if periods > 0 and periods != self.prediction_length:
+            periods = self.prediction_length
+            log.warning(
+                "Number of forecast steps is defined by n_forecasts. " "Adjusted to {}.".format(self.prediction_length)
+            )
+
         self.periods = periods
 
-        if n_historic_predictions == True:
-            n_historic_predictions = len(df) - self.context_length
         self.n_historic_predictions = n_historic_predictions
+
+
+
+
         df = df.copy(deep=True)
 
         df = df_utils.check_dataframe(df)
@@ -288,6 +320,8 @@ class NBeats:
         if self.fitted is False:
             log.warning("Model has not been fitted. Predictions will be random.")
 
+
+
         future_dataframe = future_dataframe.copy(deep=True)
 
         testing = TimeSeriesDataSet(
@@ -309,24 +343,38 @@ class NBeats:
 
         new_raw_predictions, new_x = self.model.predict(testing, mode="raw", return_x=True)
         y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()#[0, : new_x["decoder_lengths"][0]]
-        y_predicted = y_predicted.detach().numpy()
+        if self.prediction_length == 1:
+            y_predicted = y_predicted.detach().numpy()
+        else:
+            y_predicted = y_predicted.detach().numpy()[:-self.prediction_length+1]
+
+        def pad_with(vector, pad_width, iaxis, kwargs):
+            pad_value = kwargs.get('padder', np.nan)
+            vector[:pad_width[0]] = pad_value
+            vector[-pad_width[1]:] = pad_value
+
+        y_pred_padded = np.pad(y_predicted, self.prediction_length, pad_with)[self.prediction_length:-1, self.prediction_length:-self.prediction_length]
+        y_pred_padded = np.vstack([np.roll(y_pred_padded[:, i], i, axis=0) for i in range(y_pred_padded.shape[1])]).T
+
 
         result = pd.DataFrame(np.ones(shape = (len(future_dataframe), (2 + self.prediction_length)))*np.nan,
                      columns=['ds', 'y'] + [f'yhat{i}' for i in range(1, self.prediction_length+1)])
         result['ds'] = future_dataframe['ds']
-        result.loc[:-self.periods, 'y'] = future_dataframe.loc[:-self.periods, 'y'].values
-        print(result, future_dataframe.loc[:-self.periods, 'y'].values)
 
-        future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
-        future_dataframe["yhat1"] = None
-        # print(future_dataframe)
-        # print(y_predicted, y_predicted.shape)
-        future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
-        cols = ["ds", "y", "yhat1"]  # cols to keep from df
-        df_forecast = pd.concat((future_dataframe[cols],), axis=1)
-        df_forecast["residual1"] = df_forecast["yhat1"] - df_forecast["y"]
+        result.loc[:len(future_dataframe) - (self.periods+1), 'y']\
+            = future_dataframe['y'].iloc[:len(future_dataframe) - (self.periods)].values
 
-        return df_forecast
+        first_part = result.iloc[:self.context_length]
+        second_part = result.iloc[self.context_length:]
+
+
+
+        second_part.loc[:, [col for col in second_part.columns[2:]]] = y_pred_padded
+        result = pd.concat([first_part, second_part])
+        for i in range(1, self.prediction_length+1):
+            result[f'residual{i}'] = result[f"yhat{i}"] - result["y"]
+
+        return result
 
     def plot(self, fcst, ax=None, xlabel="ds", ylabel="y", figsize=(10, 6)):
         """Plot the NeuralProphet forecast, including history.
