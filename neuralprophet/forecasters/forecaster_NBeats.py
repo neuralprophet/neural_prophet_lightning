@@ -24,8 +24,8 @@ log = logging.getLogger("AdditionalModels.NBeats")
 class NBeats:
     def __init__(
         self,
-        context_length=60,
-        prediction_length=20,
+        n_lags=60,
+        n_forecasts=20,
         batch_size=None,
         epochs=100,
         weight_decay=1e-2,
@@ -51,8 +51,8 @@ class NBeats:
         self.auto_lr_find = auto_lr_find
         self.num_workers = num_workers
 
-        self.context_length = context_length
-        self.prediction_length = prediction_length
+        self.context_length = n_lags
+        self.prediction_length = n_forecasts
 
         self.hidden_size = hidden_size
         self.rnn_layers = rnn_layers
