@@ -261,7 +261,6 @@ class NBeats:
         self.n_data = df.shape[0]
 
         encoder_data = df[lambda x: x.time_idx > x.time_idx.max() - (self.context_length + n_historic_predictions)]
-        print(encoder_data, periods)
         if periods != 0:
             last_data = df[lambda x: x.time_idx == x.time_idx.max()]
             decoder_data = pd.concat(
@@ -312,10 +311,16 @@ class NBeats:
         y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()#[0, : new_x["decoder_lengths"][0]]
         y_predicted = y_predicted.detach().numpy()
 
+        result = pd.DataFrame(np.ones(shape = (len(future_dataframe), (2 + self.prediction_length)))*np.nan,
+                     columns=['ds', 'y'] + [f'yhat{i}' for i in range(1, self.prediction_length+1)])
+        result['ds'] = future_dataframe['ds']
+        result.loc[:-self.periods, 'y'] = future_dataframe.loc[:-self.periods, 'y'].values
+        print(result, future_dataframe.loc[:-self.periods, 'y'].values)
+
         future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
         future_dataframe["yhat1"] = None
-        print(future_dataframe)
-        print(y_predicted, y_predicted.shape)
+        # print(future_dataframe)
+        # print(y_predicted, y_predicted.shape)
         future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
         cols = ["ds", "y", "yhat1"]  # cols to keep from df
         df_forecast = pd.concat((future_dataframe[cols],), axis=1)
