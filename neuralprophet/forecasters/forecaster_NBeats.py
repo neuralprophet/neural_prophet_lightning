@@ -20,7 +20,7 @@ import pytorch_lightning as pl
 log = logging.getLogger("AdditionalModels.NBeats")
 
 
-class NBeatsNP:
+class NBeats:
     def __init__(
         self,
         max_encoder_length=150,
@@ -30,10 +30,10 @@ class NBeatsNP:
         patience_early_stopping=10,
         early_stop=True,
         weight_decay=1e-2,
-        learning_rate=3e-2,
+        learning_rate=None,
         auto_lr_find=True,
         num_workers=3,
-        loss_func="Huber",
+        loss_func="MSE",
         from_dataset=True,
         stack_types=["trend", "seasonality"],
         num_blocks=[3, 3],
@@ -99,6 +99,10 @@ class NBeatsNP:
         self.weight_decay = weight_decay
         self.learning_rate = learning_rate
         self.auto_lr_find = auto_lr_find
+        if self.learning_rate != None:
+            self.auto_lr_find = False
+
+
         self.num_workers = num_workers
 
         self.loss_func = loss_func

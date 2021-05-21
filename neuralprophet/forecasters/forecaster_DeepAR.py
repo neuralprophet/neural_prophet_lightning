@@ -207,10 +207,6 @@ class DeepAR:
         self.model = self._init_model(training, train_dataloader)
         self.model.set_forecaster(self)
 
-        self.trainer.fit(
-            self.model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader,
-        )
-
         self.metrics.reset()
         self.val_metrics.reset()
 

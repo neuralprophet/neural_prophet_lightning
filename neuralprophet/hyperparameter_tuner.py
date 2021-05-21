@@ -6,7 +6,10 @@ import pytorch_lightning as pl
 
 from neuralprophet import LSTM
 from neuralprophet import NeuralProphet
-
+from neuralprophet import DeepAR
+from neuralprophet import TFT
+from neuralprophet import NBeats
+import numpy as np
 
 def tune_hyperparameters(
     model_name,  # NP, LSTM
@@ -21,7 +24,7 @@ def tune_hyperparameters(
 ):
     '''
     Args:
-        model_name: str, ['NP', 'LSTM'] — The model name, which hyperparameters to tune over
+        model_name: str, ['NP', 'LSTM', 'NBeats'] — The model name, which hyperparameters to tune over
         df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
         freq: str — Data step sizes. Frequency of data recording,
             Any valid frequency for pd.date_range, such as '5min', 'D' or 'MS'
@@ -58,7 +61,6 @@ def tune_hyperparameters(
     def train_NP_tune(config, num_epochs=num_epochs):
         m = NeuralProphet(**config, epochs=num_epochs)
         train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
-        print(config)
         trainer = pl.Trainer(
             max_epochs=num_epochs,
             progress_bar_refresh_rate=0,
@@ -82,6 +84,47 @@ def tune_hyperparameters(
             logger=False,
         )
         trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+    def train_NBeats_tune(config, num_epochs=num_epochs):
+        m = NBeats(**config, epochs=num_epochs)
+        train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
+        trainer = pl.Trainer(
+            max_epochs=num_epochs,
+            progress_bar_refresh_rate=0,
+            num_sanity_val_steps=0,
+            callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False,
+        )
+        trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+    def train_TFT_tune(config, num_epochs=num_epochs):
+        m = TFT(**config, epochs=num_epochs)
+        train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
+        trainer = pl.Trainer(
+            max_epochs=num_epochs,
+            progress_bar_refresh_rate=0,
+            num_sanity_val_steps=0,
+            callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False,
+        )
+        trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+    def train_DeepAR_tune(config, num_epochs=num_epochs):
+        m = DeepAR(**config, epochs=num_epochs)
+        train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
+        trainer = pl.Trainer(
+            max_epochs=num_epochs,
+            progress_bar_refresh_rate=0,
+            num_sanity_val_steps=0,
+            callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False,
+        )
+        trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+
 
     if model_name == "NP":
         train_func = train_NP_tune
@@ -117,7 +160,38 @@ def tune_hyperparameters(
                 "lstm_bidirectional": tune.choice([False, True]),
             }
 
-    scheduler = ASHAScheduler(max_t=num_epochs, grace_period=10, reduction_factor=2)
+    elif model_name == "NBeats":
+        train_func = train_NBeats_tune
+        if mode == "auto":
+            config = {
+                "learning_rate": tune.loguniform(1e-4, 1e-1),
+                "max_encoder_length": tune.choice([10, 30, 100]),
+                # "from_dataset": tune.choice([False, True]),
+                "weight_decay": tune.loguniform(1e-4, 1e-1),
+                "loss_func": tune.choice(['Huber', 'MSE']),
+            }
+
+    elif model_name == "TFT":
+            train_func = train_TFT_tune
+            if mode == "auto":
+                config = {
+                    "learning_rate": tune.loguniform(1e-4, 1e-1),
+                    "context_length": tune.choice([10, 30, 100]),
+                    "hidden_size": tune.choice([8, 16, 32]),
+                    "attention_head_size": tune.choice([1, 2])
+                }
+    elif model_name == "DeepAR":
+            train_func = train_DeepAR_tune
+            if mode == "auto":
+                config = {
+                    "learning_rate": tune.loguniform(1e-4, 1e-1),
+                    "context_length": tune.choice([10, 30, 100]),
+                    "hidden_size": tune.choice([8, 16, 32]),
+                    "rnn_layers": tune.choice([1, 2])
+                }
+
+
+    scheduler = ASHAScheduler(max_t=num_epochs, grace_period=np.min([10, num_epochs]), reduction_factor=2)
     reporter = CLIReporter(parameter_columns=list(config.keys()), metric_columns=["loss", "training_iteration"])
 
     analysis = tune.run(

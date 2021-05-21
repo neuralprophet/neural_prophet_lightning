@@ -23,7 +23,7 @@ import pytorch_lightning as pl
 log = logging.getLogger("AdditionalModels.TFT")
 
 
-class TemporalFusionTransformerNP:
+class TFT:
     def __init__(
         self,
         context_length=60,
@@ -52,6 +52,8 @@ class TemporalFusionTransformerNP:
         self.early_stop = early_stop
         self.learning_rate = learning_rate
         self.auto_lr_find = auto_lr_find
+        if self.learning_rate != None:
+            self.auto_lr_find = False
         self.num_workers = num_workers
 
         self.context_length = context_length
@@ -216,17 +218,12 @@ class TemporalFusionTransformerNP:
         self.model = self._init_model(training, train_dataloader)
         self.model.set_forecaster(self)
 
-        self.trainer.fit(
-            self.model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader,
-        )
-
         self.metrics.reset()
         self.val_metrics.reset()
 
         if hyperparameter_optim:
             return self.model
         else:
-
             self.trainer.fit(
                 self.model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader,
             )
