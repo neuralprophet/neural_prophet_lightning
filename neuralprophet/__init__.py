@@ -24,12 +24,8 @@ warnings_log.addHandler(f_handler)
 from .forecasters.forecaster import NeuralProphet
 from .forecasters.forecaster_LSTM import LSTM
 from .forecasters.forecaster_NBeats import NBeatsNP
-from .forecasters.forecaster_DeepAR import DeepAR
+#from .forecasters.forecaster_DeepAR import DeepAR
 from .forecasters.forecaster_TFT import TemporalFusionTransformerNP
 
-from .utils.utils import set_random_seed, set_log_level
+from .utils.utils import set_random_seed, set_log_level, create_event_names_for_offsets
 from .utils.df_utils import split_df
-#from .utils import utils
-
-from neuralprophet.utils.df_utils import split_df
-#from .df_utils import split_df
