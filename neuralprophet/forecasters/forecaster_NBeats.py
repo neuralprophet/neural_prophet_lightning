@@ -18,7 +18,7 @@ from pytorch_lightning.callbacks import EarlyStopping
 
 import pytorch_lightning as pl
 
-log = logging.getLogger("AdditionalModels.DeepAR")
+log = logging.getLogger("AdditionalModels.NBeats")
 
 
 class NBeats:
@@ -35,7 +35,6 @@ class NBeats:
         learning_rate=3e-2,
         auto_lr_find=False,
         num_workers=3,
-        loss_func="huber",
         hidden_size=32,
         rnn_layers=2,
         dropout=0.1,
@@ -43,7 +42,7 @@ class NBeats:
 
         self.batch_size = batch_size
         self.weight_decay = weight_decay
-        
+
         self.epochs = epochs
         self.num_gpus = num_gpus
         self.patience_early_stopping = patience_early_stopping
@@ -58,7 +57,7 @@ class NBeats:
         self.hidden_size = hidden_size
         self.rnn_layers = rnn_layers
         self.dropout = dropout
-        self.loss_func = loss_func
+        self.loss_func = 'huber'
 
         self.fitted = False
 
@@ -90,12 +89,9 @@ class NBeats:
     def _init_model(self, training, train_dataloader):
 
         model = LightNBeats.from_dataset(
-            training,
-            learning_rate=self.learning_rate,
-            log_gradient_flow=False,
-            weight_decay=self.weight_decay,
+            training, learning_rate=self.learning_rate, log_gradient_flow=False, weight_decay=self.weight_decay,
         )
-        
+
         if self.auto_lr_find:
             res = self.trainer.tuner.lr_find(model, train_dataloader=train_dataloader, min_lr=1e-5, max_lr=1e2)
             model.hparams.learning_rate = res.suggestion()
@@ -246,8 +242,6 @@ class NBeats:
             future_dataframe: DataFrame, used further for prediction
         """
 
-
-
         if isinstance(n_historic_predictions, bool):
             if n_historic_predictions:
                 n_historic_predictions = len(df) - self.context_length
@@ -258,7 +252,6 @@ class NBeats:
             n_historic_predictions = 0
         if periods == 0 and n_historic_predictions == 0:
             raise ValueError("Set either history or future to contain more than zero values.")
-
 
         if len(df) < self.context_length:
             raise ValueError("Insufficient data for a prediction")
@@ -279,9 +272,6 @@ class NBeats:
         self.periods = periods
 
         self.n_historic_predictions = n_historic_predictions
-
-
-
 
         df = df.copy(deep=True)
 
@@ -320,8 +310,6 @@ class NBeats:
         if self.fitted is False:
             log.warning("Model has not been fitted. Predictions will be random.")
 
-
-
         future_dataframe = future_dataframe.copy(deep=True)
 
         testing = TimeSeriesDataSet(
@@ -342,37 +330,39 @@ class NBeats:
         )
 
         new_raw_predictions, new_x = self.model.predict(testing, mode="raw", return_x=True)
-        y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()#[0, : new_x["decoder_lengths"][0]]
+        y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()  # [0, : new_x["decoder_lengths"][0]]
         if self.prediction_length == 1:
             y_predicted = y_predicted.detach().numpy()
         else:
-            y_predicted = y_predicted.detach().numpy()[:-self.prediction_length+1]
+            y_predicted = y_predicted.detach().numpy()[: -self.prediction_length + 1]
 
         def pad_with(vector, pad_width, iaxis, kwargs):
-            pad_value = kwargs.get('padder', np.nan)
-            vector[:pad_width[0]] = pad_value
-            vector[-pad_width[1]:] = pad_value
+            pad_value = kwargs.get("padder", np.nan)
+            vector[: pad_width[0]] = pad_value
+            vector[-pad_width[1] :] = pad_value
 
-        y_pred_padded = np.pad(y_predicted, self.prediction_length, pad_with)[self.prediction_length:-1, self.prediction_length:-self.prediction_length]
+        y_pred_padded = np.pad(y_predicted, self.prediction_length, pad_with)[
+            self.prediction_length : -1, self.prediction_length : -self.prediction_length
+        ]
         y_pred_padded = np.vstack([np.roll(y_pred_padded[:, i], i, axis=0) for i in range(y_pred_padded.shape[1])]).T
 
+        result = pd.DataFrame(
+            np.ones(shape=(len(future_dataframe), (2 + self.prediction_length))) * np.nan,
+            columns=["ds", "y"] + [f"yhat{i}" for i in range(1, self.prediction_length + 1)],
+        )
+        result["ds"] = future_dataframe["ds"]
 
-        result = pd.DataFrame(np.ones(shape = (len(future_dataframe), (2 + self.prediction_length)))*np.nan,
-                     columns=['ds', 'y'] + [f'yhat{i}' for i in range(1, self.prediction_length+1)])
-        result['ds'] = future_dataframe['ds']
+        result.loc[: len(future_dataframe) - (self.periods + 1), "y"] = (
+            future_dataframe["y"].iloc[: len(future_dataframe) - (self.periods)].values
+        )
 
-        result.loc[:len(future_dataframe) - (self.periods+1), 'y']\
-            = future_dataframe['y'].iloc[:len(future_dataframe) - (self.periods)].values
-
-        first_part = result.iloc[:self.context_length]
-        second_part = result.iloc[self.context_length:]
-
-
+        first_part = result.iloc[: self.context_length]
+        second_part = result.iloc[self.context_length :]
 
         second_part.loc[:, [col for col in second_part.columns[2:]]] = y_pred_padded
         result = pd.concat([first_part, second_part])
-        for i in range(1, self.prediction_length+1):
-            result[f'residual{i}'] = result[f"yhat{i}"] - result["y"]
+        for i in range(1, self.prediction_length + 1):
+            result[f"residual{i}"] = result[f"yhat{i}"] - result["y"]
 
         return result
 
