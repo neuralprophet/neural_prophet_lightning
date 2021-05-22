@@ -249,20 +249,16 @@ Here we present the structure of repository and the files which were changed or 
 ``` 
 
 ## Distribution of roles and roadmap
-We distributed our main tasks and goals evenly, as described on the roadmap below. 
-Both of us will work on refactoring into PyTorch Lightning.
-Alexey will focus on the main TimeNet model class, while Polina will work on the forecaster code.
-We also distributed models we aim to add.
-Polina will work on N-Beats and LSTM, while Alexey will work on Temporal Fusion Transformers and DeepAR.
-We will write corresponding tests and documentation of implemented modules.
-Further, Polina will focus on hyperparameter tuning addition, while Alexey will implement LIBRA framework in python.
-Afterwards, we will both work on the benchmarking using LIBRA framework and finalization of the project.
+We distributed our main tasks and goals evenly, as described on the roadmap. 
+Both of us were working on refactoring into PyTorch Lightning.
+Alexey focused on the main TimeNet model class, while Polina worked on the forecaster code.
+We also distributed addition of models, such that Polina implemented on N-Beats and LSTM, while Alexey implemented Temporal Fusion Transformers and DeepAR.
+We both have writen corresponding tests and documentation of implemented modules.
+Further, Polina focused on hyperparameter tuning addition, while Alexey implemented LIBRA framework in python.
+Afterwards, we both worked on the benchmarking using LIBRA framework and finalization of the project.
 
-At a current stage, we are finished with code refactoring into Pytorch Lightning.
-We also added three models: LSTM, NBeats and DeepAR, and created a structure for TemporalFusionTransformer, which will be added further.
-We also implemented hyperparameter optimization module and will further work on adding support for other models.
-Currently, it supports LSTM and NeuralProphet. 
-
+At a current stage, we have finished all the aims that were set for the project.
+The only bottleneck that we encountered was the computational intensity of benchmarking, therefore we completed benchmarking only on sample from all time series available.
 
 <center>
 <img src="roadmap_gantt.png" alt="roadmap"  width="1000"/>
