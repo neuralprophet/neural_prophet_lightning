@@ -358,7 +358,7 @@ class DeepAR:
             add_target_scales=False,
         )
 
-        y_predicted = self.model.predict(testing, mode="prediction")  # , return_x=True)
+        y_predicted = self.model.predict(testing, mode="prediction").detach().cpu()  # , return_x=True)
 
         def pad_with(vector, pad_width, iaxis, kwargs):
             pad_value = kwargs.get("padder", np.nan)
