@@ -1,11 +1,10 @@
 import datetime
-import time
 import numpy as np
 import pandas as pd
 import logging
 import torch
-from neuralprophet import time_dataset
-from neuralprophet.utils import set_y_as_percent
+from neuralprophet.dataset import time_dataset
+from neuralprophet.utils.utils import set_y_as_percent
 
 log = logging.getLogger("NP.plotting")
 

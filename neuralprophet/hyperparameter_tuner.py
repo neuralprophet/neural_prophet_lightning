@@ -1,11 +1,15 @@
-from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
-from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
+from ray.tune.schedulers import ASHAScheduler
+from ray.tune.integration.pytorch_lightning import TuneReportCallback
 from ray import tune
 from ray.tune import CLIReporter
 import pytorch_lightning as pl
 
-from neuralprophet.forecaster_additional_models import LSTM
+from neuralprophet import LSTM
 from neuralprophet import NeuralProphet
+from neuralprophet import DeepAR
+from neuralprophet import TFT
+from neuralprophet import NBeats
+import numpy as np
 
 
 def tune_hyperparameters(
@@ -15,13 +19,13 @@ def tune_hyperparameters(
     num_epochs=100,
     mode="auto",  #'manual'
     config=None,
-    num_samples=40,  # number of samples from hyperparameter space
+    num_samples=10,  # number of samples from hyperparameter space
     resources_per_trial={"cpu": 1},
     return_results=True,
 ):
-    '''
+    """
     Args:
-        model_name: str, ['NP', 'LSTM'] — The model name, which hyperparameters to tune over
+        model_name: str, ['NP', 'LSTM', 'NBeats'] — The model name, which hyperparameters to tune over
         df: pandas.DataFrame — DataFrame containing column 'ds', 'y' with all data
         freq: str — Data step sizes. Frequency of data recording,
             Any valid frequency for pd.date_range, such as '5min', 'D' or 'MS'
@@ -37,12 +41,10 @@ def tune_hyperparameters(
             Note, that if you use tune.grid_search, this parameter will be overwritten by the model
         resources_per_trial: dict — Resources per trial setting for ray.tune.run, {'cpu': 1, 'gpu': 2} for example
         return_results: bool — whether to return dataframe with results of num_samples trials
-
     Returns:
         best_config: dict — dictionary with best chosen parameters
         result_df: pandas.DataFrame — DataFrame with results of each trial (only if return_results == True)
-    '''
-
+    """
 
     if mode == "manual":
         assert type(config) != type(
@@ -58,7 +60,6 @@ def tune_hyperparameters(
     def train_NP_tune(config, num_epochs=num_epochs):
         m = NeuralProphet(**config, epochs=num_epochs)
         train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
-        print(config)
         trainer = pl.Trainer(
             max_epochs=num_epochs,
             progress_bar_refresh_rate=0,
@@ -73,6 +74,45 @@ def tune_hyperparameters(
         m = LSTM(**config, epochs=num_epochs)
         train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
 
+        trainer = pl.Trainer(
+            max_epochs=num_epochs,
+            progress_bar_refresh_rate=0,
+            num_sanity_val_steps=0,
+            callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False,
+        )
+        trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+    def train_NBeats_tune(config, num_epochs=num_epochs):
+        m = NBeats(**config, epochs=num_epochs)
+        train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
+        trainer = pl.Trainer(
+            max_epochs=num_epochs,
+            progress_bar_refresh_rate=0,
+            num_sanity_val_steps=0,
+            callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False,
+        )
+        trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+    def train_TFT_tune(config, num_epochs=num_epochs):
+        m = TFT(**config, epochs=num_epochs)
+        train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
+        trainer = pl.Trainer(
+            max_epochs=num_epochs,
+            progress_bar_refresh_rate=0,
+            num_sanity_val_steps=0,
+            callbacks=TuneReportCallback({"loss": "val_loss"}, on="validation_end"),
+            checkpoint_callback=False,
+            logger=False,
+        )
+        trainer.fit(model, train_dataloader=train_loader, val_dataloaders=val_loader)
+
+    def train_DeepAR_tune(config, num_epochs=num_epochs):
+        m = DeepAR(**config, epochs=num_epochs)
+        train_loader, val_loader, model = m._hyperparameter_optimization(df, freq)
         trainer = pl.Trainer(
             max_epochs=num_epochs,
             progress_bar_refresh_rate=0,
@@ -117,7 +157,34 @@ def tune_hyperparameters(
                 "lstm_bidirectional": tune.choice([False, True]),
             }
 
-    scheduler = ASHAScheduler(max_t=num_epochs, grace_period=10, reduction_factor=2)
+    elif model_name == "NBeats":
+        train_func = train_NBeats_tune
+        if mode == "auto":
+            config = {
+                "learning_rate": tune.loguniform(1e-4, 1e-1),
+                "n_lags": tune.choice([30, 100]),
+            }
+
+    elif model_name == "TFT":
+        train_func = train_TFT_tune
+        if mode == "auto":
+            config = {
+                "learning_rate": tune.loguniform(1e-4, 1e-1),
+                "n_lags": tune.choice([10, 30, 100]),
+                "hidden_size": tune.choice([8, 16, 32]),
+                "attention_head_size": tune.choice([1, 2]),
+            }
+    elif model_name == "DeepAR":
+        train_func = train_DeepAR_tune
+        if mode == "auto":
+            config = {
+                "learning_rate": tune.loguniform(1e-4, 1e-1),
+                "n_lags": tune.choice([10, 30, 100]),
+                "hidden_size": tune.choice([8, 16, 32]),
+                "rnn_layers": tune.choice([1, 2]),
+            }
+
+    scheduler = ASHAScheduler(max_t=num_epochs, grace_period=np.min([10, num_epochs]), reduction_factor=2)
     reporter = CLIReporter(parameter_columns=list(config.keys()), metric_columns=["loss", "training_iteration"])
 
     analysis = tune.run(
@@ -140,3 +207,24 @@ def tune_hyperparameters(
         return analysis.best_config, analysis.results_df
     else:
         return analysis.best_config
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
