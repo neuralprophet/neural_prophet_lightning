@@ -134,7 +134,7 @@ def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase, save_res
         if i >= n_datasets:
             break
         one_dataset_metrics = {}
-        models = ['LSTM']#, 'NP', 'DeepAR', 'NBeats', 'TFT']
+        models = ['LSTM', 'NP', 'DeepAR', 'NBeats', 'TFT']
         for model in models:
             params = get_parameters(df, dataset_name, frequencies, method, usecase)
             benchmark(model, method, df, params, one_dataset_metrics, n_epochs)
