@@ -48,6 +48,7 @@ an object of the `NeuralProphet` class as follows and calling the fit function. 
 fits a model with the default settings in the model. For more details on these default settings, refer to
 the Section on [Hyperparameter Selction](hyperparameter-selection.md).
 
+## Hyperparameter Optimization
 Also, NeuralProphet contains functional for hyperparameter optimization, which will be exceptionally useful for new users.
 For more detail, refer to Section [Hyperparameter Optimization](model/hyperparameter_optimization.md).
 
