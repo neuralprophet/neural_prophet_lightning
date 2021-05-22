@@ -33,7 +33,7 @@ class DeepAR:
             patience_early_stopping=10,
             early_stop=True,
             learning_rate=3e-2,
-            auto_lr_find=True,
+            auto_lr_find=False,
             num_workers=3,
             loss_func="normaldistributionloss",
             hidden_size=32,
