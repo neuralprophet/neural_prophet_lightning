@@ -132,13 +132,14 @@ def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase, save_res
     metrics = {}
     for i, (dataset_name, df) in enumerate(datasets.items()):
         if i >= n_datasets:
-            return metrics
+            break
         one_dataset_metrics = {}
-        models = ['LSTM', 'NP', 'DeepAR', 'NBeats', 'TFT']
+        models = ['LSTM']#, 'NP', 'DeepAR', 'NBeats', 'TFT']
         for model in models:
             params = get_parameters(df, dataset_name, frequencies, method, usecase)
             benchmark(model, method, df, params, one_dataset_metrics, n_epochs)
         metrics.update({dataset_name: one_dataset_metrics})
+
     if save_res:
         loc_res = '../results_benchmarking/'
         pd.DataFrame(metrics).to_csv(loc_res + f'results_libra_{method}_{usecase}.csv')
