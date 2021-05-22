@@ -44,7 +44,7 @@ It is supported by Pytorch Lightning Trainer module by default and allows for di
 We introduced LSTM model, as a part of additional models modules.
 It is based on refactored into Pytorch Lightning LSTM model from pure Pytorch.
 For LSTM, the main class has the same functionality as the NeuralProphet and supports all main methods. 
-An example of LSTM usage can be foung in `example_notebooks/LSTM_example.ipynb`(example_notebooks/LSTM_example.ipynb) notebook.
+An example of LSTM usage can be foung in `example_notebooks/LSTM_example.ipynb` [notebook](example_notebooks/LSTM_example.ipynb).
 
 Here is the example of using LSTM module:
 ```
@@ -64,7 +64,7 @@ We also introduced NBeats model.
 It is based on the Pytorch Forecasting model implementation.
 We refactored existing model code to support NeuralProphet Metric class.
 We also created a new wrapper class, which has the same main modules as NeuralProphet and can be used with the same API.
-An example of NBeats usage can be foung in `example_notebooks/NBeats_example.ipynb` notebook.
+An example of NBeats usage can be foung in `example_notebooks/NBeats_example.ipynb` [notebook](example_notebooks/NBeats_example.ipynb).
 
 Here is the example of using NBeats module:
 ```
@@ -80,7 +80,7 @@ forecast = m.predict(future)
 ### DeepAR
 We also introduced DeepAR model in the same way as NBeats, as it also was based on Pytorch Forecasting library.
 We also refactored existing model code to support NeuralProphet Metric class, in particular training and validation steps.
-An example of DeepAR usage can be foung in `example_notebooks/DeepAR_example.ipynb` notebook.
+An example of DeepAR usage can be foung in `example_notebooks/DeepAR_example.ipynb` [notebook](example_notebooks/DeepAR_example.ipynb).
 
 Here is the example of using DeepAR module:
 ```
@@ -98,7 +98,7 @@ It is based on the Pytorch Forecasting model implementation.
 We refactored existing model code to support NeuralProphet Metric class. 
 We also created a new wrapper class, which has the same main modules as NeuralProphet 
 and can be used with the same API. 
-An example of TFT usage can be found in `example_notebooks/TFT_example.ipynb` notebook.
+An example of TFT usage can be found in `example_notebooks/TFT_example.ipynb` [notebook](example_notebooks/TFT_example.ipynb).
 
 Here is the example of using NBeats module:
 
@@ -117,12 +117,12 @@ forecast = m.predict(future)
 ### Hyperparameter tuning
 We introduced a new module for hyperparameter tuning.
 It relies on Ray Tune library, as it has an easy integration with Pytorch Lightning models and allows distributed training.
-This module is located in `neuralprophet/hyperparameter_tuner.py` file.
+This module is located in `neuralprophet/hyperparameter_tuner.py` [file](example_notebooks/hyperparameter_tuner.py).
 It has two modes: auto and manual.
 The automated mode runs hyperparameter tuning on predefined by us sets of hyperparameters.
 It is useful as a first step for new users and fast tuning.
 The manual mode allows users to define their own hyperparameter spaces to tune over. 
-In `example_notebooks/hyperparameter_example.ipynb` we provide users with a basic example of how to use this module.
+In `example_notebooks/hyperparameter_example.ipynb` [notebook](example_notebooks/hyperparameter_example.ipynb) we provide users with a basic example of how to use this module.
 
 Here is an example of hyperparameter optimization usage:
 ```
@@ -154,9 +154,9 @@ It can be used further directly into NeuralProphet configuration initialization.
 The dataset we provide in `example_data/LIBRA/` is the dataset on which results are evaluated.
 It contains 400 time series from four domains: economics, finance, human, or nature.
 We ran benchmarking on part of datasets, as models we want to test are deep and time series in these datasets are mostly large.
-In order to run the small version of benchmarking, see the `example_notebooks/LIBRA.ipynb`. 
+In order to run the small version of benchmarking, see the [notebook](example_notebooks/LIBRA_example.ipynb) `example_notebooks/LIBRA_example.ipynb`. 
 Small run of LIBRA is also being run during the debagging procedure. 
-In order to convert the results into nice latex tables, see the `example_notebooks/evaluation_results.ipynb`.
+In order to convert the results into nice latex tables, see the `example_notebooks/evaluation_results.ipynb` [notebook](example_notebooks/evaluation_results.ipynb).
 Please, note, that benchmarking takes a lot of time even for small run.
 
 More details on the results of benchmarking are available in our [Third status report](reports/Third_Status_Report_TFDS.pdf).
