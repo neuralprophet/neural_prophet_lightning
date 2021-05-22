@@ -42,21 +42,24 @@ class DeepAR:
     ):
         '''
         Args:
-            n_lags:
-            n_forecasts:
-            batch_size:
-            epochs:
-            num_gpus:
-            patience_early_stopping:
-            early_stop:
-            learning_rate:
-            auto_lr_find:
-            num_workers:
-            loss_func:
-            hidden_size:
-            rnn_layers:
-            dropout:
+            n_lags: int, — Number of time units that condition the predictions. Also known as 'lookback period'.
+                Should be between 1-10 times the prediction length. Can be seen as equivalent for n_lags in NP
+            n_forecasts: int - Number of time units that the model predicts
+            batch_size: int, — batch_size. If set to None, automatic batch size will be set
+            epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
+            num_gpus: int, — number of gpus to use
+            patience_early_stopping: int, — patience parameter of EarlyStopping callback
+            early_stop: bool, — whether to use EarlyStopping callback
+            learning_rate: float, — learning rate for the model. Will be overwritten, if auto_lr_find is used
+            auto_lr_find: bool, — whether to use automatic laerning rate finder
+            num_workers: int, — number of workers for DataLoaders
+            loss_func: str, Distribution loss function. Keep in mind that each distribution loss function might
+                have specific requirements for target normalization. Defaults to NormalDistributionLoss.
+            hidden_size: int, hidden recurrent size - the most important hyperparameter along with rnn_layers.
+            rnn_layers: int, number of RNN layers - important hyperparameter.
+            dropout: float, dropout in RNN layers, should be between 0 and 1.
         '''
+
 
         self.batch_size = batch_size
 
@@ -66,6 +69,8 @@ class DeepAR:
         self.early_stop = early_stop
         self.learning_rate = learning_rate
         self.auto_lr_find = auto_lr_find
+        if self.learning_rate != None:
+            self.auto_lr_find = False
         self.num_workers = num_workers
 
         self.context_length = n_lags

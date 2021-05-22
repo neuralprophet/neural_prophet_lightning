@@ -39,9 +39,29 @@ class TFT:
             hidden_size=32,
             attention_head_size=1,
             hidden_continuous_size=8,
-            # rnn_layers=2,
+
             dropout=0.1,
     ):
+        '''
+        Args:
+            n_lags: int, — Number of time units that condition the predictions. Also known as 'lookback period'.
+                Should be between 1-10 times the prediction length. Can be seen as equivalent for n_lags in NP
+            n_forecasts: int - Number of time units that the model predicts
+            batch_size: int, — batch_size. If set to None, automatic batch size will be set
+            epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
+            num_gpus: int, — number of gpus to use
+            patience_early_stopping: int, — patience parameter of EarlyStopping callback
+            early_stop: bool, — whether to use EarlyStopping callback
+            learning_rate: float, — learning rate for the model. Will be overwritten, if auto_lr_find is used
+            auto_lr_find: bool, — whether to use automatic laerning rate finder
+            num_workers: int, — number of workers for DataLoaders
+            loss_func: str, loss function taking prediction and targets, should be from MultiHorizonMetric class,
+                defaults to QuantileLoss.
+            hidden_size: int, hidden size of network which is its main hyperparameter and can range from 8 to 512
+            attention_head_size: int, number of attention heads, lager values (up to 8) for large amount of data
+            hidden_continuous_size: int, dictionary mapping continuous input indices to sizes for variable selection
+            dropout: dropout in RNN layers, should be between 0 and 1.
+        '''
 
         self.batch_size = batch_size
 
@@ -59,7 +79,6 @@ class TFT:
         self.prediction_length = n_forecasts
 
         self.hidden_size = hidden_size
-        # self.rnn_layers = rnn_layers
         self.attention_head_size = attention_head_size
         self.hidden_continuous_size = hidden_continuous_size
         self.dropout = dropout
