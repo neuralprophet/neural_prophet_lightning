@@ -4,7 +4,7 @@ This is the repository for NeuralProphet project for Theoretical Foundations of 
 Contributors are Alexey Voskoboinikov and Polina Pilyugina.
 The main aim of this project is to improve NeuralProphet Library.
 
-[Second status report](reports/Second_Status_Report_TFDS.pdf) is contained in the repository.
+[Third status report](reports/Third_Status_Report_TFDS.pdf) is contained in the repository.
 
 ### Project outline
 - **Refactor the code** with **PyTorch Lightning** in accordance with existing API
@@ -159,7 +159,7 @@ Small run of LIBRA is also being run during the debagging procedure.
 In order to convert the results into nice latex tables, see the `example_notebooks/evaluation_results.ipynb`.
 Please, note, that benchmarking takes a lot of time even for small run.
 
-More details on the results of benchmarking are available in our Third Status Report.
+More details on the results of benchmarking are available in our [Third status report](reports/Third_Status_Report_TFDS.pdf).
 
 
 # Testing the working code

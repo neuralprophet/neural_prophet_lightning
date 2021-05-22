@@ -48,6 +48,10 @@ an object of the `NeuralProphet` class as follows and calling the fit function. 
 fits a model with the default settings in the model. For more details on these default settings, refer to
 the Section on [Hyperparameter Selction](hyperparameter-selection.md).
 
+## Hyperparameter Optimization
+Also, NeuralProphet contains functional for hyperparameter optimization, which will be exceptionally useful for new users.
+For more detail, refer to Section [Hyperparameter Optimization](model/hyperparameter_optimization.md).
+
 ```python
 m = NeuralProphet()
 metrics = m.fit(df, freq="D")
@@ -126,3 +130,7 @@ set_random_seed(0)
 ```
 This should lead to identical results every time you run the model. 
 Note that you have to explicitly set the random seed to the same random number each time before fitting the model.
+
+## Additional models compairson
+For evaluation of performance, NeuralProphet implementation contains additional state-of-the-art deep models under the same API. For details on these models follow to Section [Stat-of-the-art models](model/additional_models.md)
+
