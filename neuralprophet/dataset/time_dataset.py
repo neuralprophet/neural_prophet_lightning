@@ -7,7 +7,7 @@ from torch.utils.data.dataset import Dataset
 from neuralprophet.tools import hdays as hdays_part2
 import holidays as hdays_part1
 from collections import defaultdict
-from neuralprophet import utils
+from neuralprophet.utils import utils
 import logging
 
 log = logging.getLogger("NP.time_dataset")

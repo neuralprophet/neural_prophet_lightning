@@ -9,9 +9,12 @@ import matplotlib.pyplot as plt
 import logging
 import math
 import torch
+from ray import tune
 
-from neuralprophet import NeuralProphet, set_random_seed
+from neuralprophet import NeuralProphet, set_random_seed, LSTM, NBeats, DeepAR, TFT
 from neuralprophet.utils import df_utils
+from neuralprophet.hyperparameter_tuner import tune_hyperparameters
+from neuralprophet.libra import get_datasets, libra
 
 log = logging.getLogger("NP.test")
 log.setLevel("WARNING")
@@ -595,3 +598,73 @@ class IntegrationTests(unittest.TestCase):
         metrics = m.fit(df, freq="5min")
         future = m.make_future_dataframe(df, periods=12 * 24, n_historic_predictions=12 * 24)
         forecast = m.predict(future)
+
+
+    def test_LSTM(self):
+        log.info("TEST LSTM")
+        df = pd.read_csv(YOS_FILE, nrows=NROWS)
+        m = LSTM(
+            n_lags=10,
+            n_forecasts=3,
+            epochs=EPOCHS,
+            learning_rate=3e-2,
+        )
+        metrics = m.fit(df, freq="5min")
+        future = m.make_future_dataframe(df, periods=12 * 24, n_historic_predictions=12 * 24)
+        forecast = m.predict(future)
+
+    def test_DeepAR(self):
+        log.info("TEST DeepAR")
+        df = pd.read_csv(YOS_FILE, nrows=NROWS)
+        m = DeepAR(
+            n_lags=10,
+            n_forecasts=3,
+            epochs=EPOCHS,
+        )
+        metrics = m.fit(df, freq="5min")
+        future = m.make_future_dataframe(df, periods=12 * 24, n_historic_predictions=12 * 24)
+        forecast = m.predict(future)
+
+    def test_NBeats(self):
+        log.info("TEST NBeats")
+        df = pd.read_csv(YOS_FILE, nrows=NROWS)
+        m = NBeats(
+            n_lags=10,
+            n_forecasts=3,
+            epochs=EPOCHS,
+        )
+        metrics = m.fit(df, freq="5min")
+        future = m.make_future_dataframe(df, periods=12 * 24, n_historic_predictions=12 * 24)
+        forecast = m.predict(future)
+
+    def test_TFT(self):
+        log.info("TEST TFT")
+        df = pd.read_csv(YOS_FILE, nrows=NROWS)
+        m = TFT(
+            n_lags=10,
+            n_forecasts=3,
+            epochs=EPOCHS,
+        )
+        metrics = m.fit(df, freq="5min")
+        future = m.make_future_dataframe(df, periods=12 * 24, n_historic_predictions=12 * 24)
+        forecast = m.predict(future)
+
+    def test_ray_tune(self):
+        log.info("TEST Ray")
+        df = pd.read_csv(YOS_FILE, nrows=3)
+        freq = '5min'
+        from ray import tune
+
+        config = {'n_lags': tune.grid_search([10, 20, 30]),
+                  'learning_rate': tune.loguniform(1e-4, 1e-1),
+                  'num_hidden_layers': tune.choice([2, 8, 16])}
+        best_params, results_df = tune_hyperparameters('NP', df, freq, mode='manual', num_samples=3, config=config)
+
+    def test_Libra(self):
+        log.info("TEST Libra")
+        usecase = 'economics'
+        datasets, frequencies = get_datasets(usecase)
+        methods = ['1step', 'multistep']
+        metrics = libra(n_datasets=1, datasets=datasets, frequencies=frequencies,
+                        method=methods[0], n_epochs=1, usecase=usecase)
+

@@ -47,6 +47,7 @@ def debug_integration_all(plot=False):
 
     itests = test_integration.IntegrationTests()
 
+    itests.test_Libra()
     itests.test_names()
     itests.test_train_eval_test()
     itests.test_trend()
@@ -68,6 +69,12 @@ def debug_integration_all(plot=False):
     itests.test_yosemite()
     itests.test_model_cv()
     itests.test_callable_loss()
+    itests.test_LSTM()
+    itests.test_DeepAR()
+    itests.test_NBeats()
+    itests.test_TFT()
+    itests.test_Libra()
+    itests.test_ray_tune()
 
 
 def debug_unit_all(plot=False):
