@@ -1,6 +1,5 @@
 # NeuralProphet project for Theoretical Foundations of DataScience course
 
----
 This is the repository for NeuralProphet project for Theoretical Foundations of DataScience course.
 Contributors are Alexey Voskoboinikov and Polina Pilyugina.
 The main aim of this project is to improve NeuralProphet Library.
