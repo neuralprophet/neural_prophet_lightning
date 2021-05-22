@@ -151,25 +151,15 @@ An example output of this function looks as follows:
 It can be used further directly into NeuralProphet configuration initialization.
 
 # LIBRA benchmarking
-
-In order to run the benchmarking the dataset should be downloaded.
-It is publicly available at [Zenodo](http://doi.org/10.5281/zenodo.4399959).
-The easiest way to download it is via `zenodo-get`.
-
-First, you need to install it via the following command:
-
-```
-pip3 install zenodo_get
-```
-
-Further, to download this particular dataset use the following command line:
-
-```
-zenodo_get 10.5281/zenodo.4399959
-```
-
+The dataset we provide in `example_data/LIBRA/` is the dataset on which results are evaluated.
 It contains 400 time series from four domains: economics, finance, human, or nature.
+We ran benchmarking on part of datasets, as models we want to test are deep and time series in these datasets are mostly large.
+In order to run the small version of benchmarking, see the `example_notebooks/LIBRA.ipynb`. 
+Small run of LIBRA is also being run during the debagging procedure. 
+In order to convert the results into nice latex tables, see the `example_notebooks/evaluation_results.ipynb`.
+Please, note, that benchmarking takes a lot of time even for small run.
 
+More details on the results of benchmarking are available in our Third Status Report.
 
 
 # Testing the working code
@@ -190,29 +180,26 @@ Here we present the structure of repository and the files which were changed or 
 
 ``` 
 └── neural_prophet
-    ├── LICENSE
-    ├── MANIFEST.in
     ├── README.md
     ├── docs
+    │   ├── images
     │   ├── model
     │   │   ├── additional_models.md
     │   │   ├── hyperparameter_optimization.md
+    │   └── zh
     ├── example_data
+    │   ├── LIBRA
     ├── example_notebooks
     │   ├── DeepAR_example.ipynb
     │   ├── LIBRA.ipynb
     │   ├── LSTM_example.ipynb
     │   ├── NBeats_example.ipynb
     │   ├── TFT_example.ipynb
+    │   ├── evaluation_results.ipynb
     │   ├── hyperparameter_optimization_example.ipynb
-    ├── mkdocs.yml
     ├── neuralprophet
-    │   ├── __init__.py
     │   ├── dataset
-    │   │   ├── __init__.py
-    │   │   └── time_dataset.py
     │   ├── forecasters
-    │   │   ├── __init__.py
     │   │   ├── forecaster.py
     │   │   ├── forecaster_DeepAR.py
     │   │   ├── forecaster_LSTM.py
@@ -220,54 +207,58 @@ Here we present the structure of repository and the files which were changed or 
     │   │   ├── forecaster_NBeats_old.py
     │   │   └── forecaster_TFT.py
     │   ├── hyperparameter_tuner.py
+    │   ├── libra.py
     │   ├── models
     │   │   ├── DeepAR.py
     │   │   ├── LSTM.py
     │   │   ├── NBeats.py
     │   │   ├── TFT.py
-    │   │   ├── __init__.py
     │   │   └── time_net.py
     │   ├── tools
-    │   │   ├── __init__.py
     │   │   ├── configure.py
     │   │   ├── hdays.py
     │   │   ├── metrics.py
+    │   │   ├── metrics_libra.py
     │   │   ├── plot_forecast.py
     │   │   └── plot_model_parameters.py
     │   └── utils
-    │       ├── __init__.py
     │       ├── df_utils.py
     │       ├── utils.py
     │       └── utils_torch.py
     ├── notes
     ├── peer_reviews
-    ├── pyproject.toml
     ├── reports
     ├── requirements.txt
+    ├── results_benchmarking
+    │   └── example
+    │       ├── results_libra_multistep_economics.csv
+    │       ├── results_libra_multistep_finance.csv
+    │       ├── results_libra_multistep_human.csv
+    │       ├── results_libra_multistep_nature.csv
+    │       ├── results_libra_onestep_economics.csv
+    │       ├── results_libra_onestep_finance.csv
+    │       ├── results_libra_onestep_human.csv
+    │       └── results_libra_onestep_nature.csv
     ├── roadmap_gantt.png
     ├── scripts
     ├── setup.py
     └── tests
         ├── debug.py
-        ├── test_integration.py
-        └── test_unit.py
+        └── test_integration.py
+
 ``` 
 
 ## Distribution of roles and roadmap
-We distributed our main tasks and goals evenly, as described on the roadmap below. 
-Both of us will work on refactoring into PyTorch Lightning.
-Alexey will focus on the main TimeNet model class, while Polina will work on the forecaster code.
-We also distributed models we aim to add.
-Polina will work on N-Beats and LSTM, while Alexey will work on Temporal Fusion Transformers and DeepAR.
-We will write corresponding tests and documentation of implemented modules.
-Further, Polina will focus on hyperparameter tuning addition, while Alexey will implement LIBRA framework in python.
-Afterwards, we will both work on the benchmarking using LIBRA framework and finalization of the project.
+We distributed our main tasks and goals evenly, as described on the roadmap. 
+Both of us were working on refactoring into PyTorch Lightning.
+Alexey focused on the main TimeNet model class, while Polina worked on the forecaster code.
+We also distributed addition of models, such that Polina implemented on N-Beats and LSTM, while Alexey implemented Temporal Fusion Transformers and DeepAR.
+We both have writen corresponding tests and documentation of implemented modules.
+Further, Polina focused on hyperparameter tuning addition, while Alexey implemented LIBRA framework in python.
+Afterwards, we both worked on the benchmarking using LIBRA framework and finalization of the project.
 
-At a current stage, we are finished with code refactoring into Pytorch Lightning.
-We also added three models: LSTM, NBeats and DeepAR, and created a structure for TemporalFusionTransformer, which will be added further.
-We also implemented hyperparameter optimization module and will further work on adding support for other models.
-Currently, it supports LSTM and NeuralProphet. 
-
+At a current stage, we have finished all the aims that were set for the project.
+The only bottleneck that we encountered was the computational intensity of benchmarking, therefore we completed benchmarking only on sample from all time series available.
 
 <center>
 <img src="roadmap_gantt.png" alt="roadmap"  width="1000"/>
