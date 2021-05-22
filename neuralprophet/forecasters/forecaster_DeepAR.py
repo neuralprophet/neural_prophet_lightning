@@ -40,6 +40,23 @@ class DeepAR:
             rnn_layers=2,
             dropout=0.1,
     ):
+        '''
+        Args:
+            n_lags:
+            n_forecasts:
+            batch_size:
+            epochs:
+            num_gpus:
+            patience_early_stopping:
+            early_stop:
+            learning_rate:
+            auto_lr_find:
+            num_workers:
+            loss_func:
+            hidden_size:
+            rnn_layers:
+            dropout:
+        '''
 
         self.batch_size = batch_size
 
