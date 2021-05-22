@@ -1,6 +1,5 @@
 # NeuralProphet project for Theoretical Foundations of DataScience course
 
----
 This is the repository for NeuralProphet project for Theoretical Foundations of DataScience course.
 Contributors are Alexey Voskoboinikov and Polina Pilyugina.
 The main aim of this project is to improve NeuralProphet Library.
@@ -172,6 +171,17 @@ zenodo_get 10.5281/zenodo.4399959
 It contains 400 time series from four domains: economics, finance, human, or nature.
 
 
+
+# Testing the working code
+
+In order to test the code, we have added necessary tests for all new functional into tests module.
+It runs automatically with commit, when the library is installed in the dev version.
+However, one can always run the debug script to check the pipeline.
+In order to do so, use the following command from the root directory of the project
+```bash
+cd tests
+python debug.py
+```
 
 
 ## Repository structure:
