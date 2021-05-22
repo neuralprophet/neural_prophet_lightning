@@ -382,27 +382,3 @@ class NBeats:
 
         return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize,)
 
-df = []
-freq = 0
-class TFT:
-    def __init__(self):
-        pass
-
-
-
-m = TFT(
-    n_lags=32,
-    n_forecasts=10,
-    epochs=10,
-    learning_rate=0.03,
-    hidden_size=16,
-    attention_head_size=1,
-    dropout=0.1,
-    hidden_continuous_size=8,
-)
-
-metrics = m.fit(df, freq = freq)
-future = m.make_future_dataframe(df, n_historic_predictions=True)
-forecast = m.predict(future)
-
-
