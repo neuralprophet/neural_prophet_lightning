@@ -128,7 +128,7 @@ def benchmark(model, method, df, params, one_dataset_metrics, n_epochs):
         print('error')
 
 
-def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase, save_res = True):
+def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase, save_res=True):
     metrics = {}
     for i, (dataset_name, df) in enumerate(datasets.items()):
         if i >= n_datasets:
