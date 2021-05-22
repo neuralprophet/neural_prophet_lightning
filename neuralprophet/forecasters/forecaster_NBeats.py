@@ -60,6 +60,7 @@ class NBeats:
         self.loss_func = 'huber'
 
         self.fitted = False
+        self.freq = None
 
         if type(self.loss_func) == str:
             if self.loss_func.lower() in ["huber", "smoothl1", "smoothl1loss"]:
@@ -109,9 +110,9 @@ class NBeats:
             self.batch_size = min(max_batch, max(min_batch, self.batch_size))
             self.batch_size = min(n_data, self.batch_size)
 
-    def _create_dataset(self, df, freq, valid_p=0.2):
+    def _create_dataset(self, df, valid_p=0.2):
         df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
+        df = self._handle_missing_data(df)
         df = df[["ds", "y"]]
         df["time_idx"] = range(df.shape[0])
         df["series"] = 0
@@ -143,7 +144,7 @@ class NBeats:
 
         return training, train_dataloader, val_dataloader
 
-    def _handle_missing_data(sefl, df, freq, predicting=False):
+    def _handle_missing_data(self, df, predicting=False):
         """Checks, auto-imputes and normalizes new data
 
         Args:
@@ -158,7 +159,7 @@ class NBeats:
         impute_limit_linear = 5
         impute_rolling = 20
 
-        df, missing_dates = df_utils.add_missing_dates_nan(df, freq=freq)
+        df, missing_dates = df_utils.add_missing_dates_nan(df, freq=self.freq)
 
         # impute missing values
         data_columns = []
@@ -221,17 +222,17 @@ class NBeats:
             return metrics_df
 
     def fit(self, df, freq, valid_p=0.2):
-
-        training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
+        self.freq = freq
+        training, train_dataloader, val_dataloader = self._create_dataset(df, valid_p)
         metrics_df = self._train(training, train_dataloader, val_dataloader)
         return metrics_df
 
-    def _hyperparameter_optimization(self, df, freq, valid_p=0.2):
-        training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
+    def _hyperparameter_optimization(self, df, valid_p=0.2):
+        training, train_dataloader, val_dataloader = self._create_dataset(df, valid_p)
         model = self._train(training, train_dataloader, val_dataloader, hyperparameter_optim=True)
         return train_dataloader, val_dataloader, model
 
-    def make_future_dataframe(self, df, freq, periods=0, n_historic_predictions=0):
+    def make_future_dataframe(self, df, periods=0, n_historic_predictions=0):
         """
         Creates a dataframe for prediction
         Args:
@@ -276,7 +277,7 @@ class NBeats:
         df = df.copy(deep=True)
 
         df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
+        df = self._handle_missing_data(df)
         df = df[["ds", "y"]]
         df["time_idx"] = range(df.shape[0])
         df["series"] = 0
@@ -292,7 +293,7 @@ class NBeats:
             decoder_data["time_idx"] = range(
                 decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
             )
-            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=freq)[1:]
+            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=self.freq)[1:]
             future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
         elif periods == 0:
             future_dataframe = encoder_data
@@ -381,5 +382,3 @@ class NBeats:
         """
 
         return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize,)
-
-

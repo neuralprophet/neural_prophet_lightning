@@ -24,21 +24,21 @@ log = logging.getLogger("AdditionalModels.DeepAR")
 
 class DeepAR:
     def __init__(
-        self,
-        n_lags=60,
-        n_forecasts=20,
-        batch_size=None,
-        epochs=100,
-        num_gpus=0,
-        patience_early_stopping=10,
-        early_stop=True,
-        learning_rate=3e-2,
-        auto_lr_find=True,
-        num_workers=3,
-        loss_func="normaldistributionloss",
-        hidden_size=32,
-        rnn_layers=2,
-        dropout=0.1,
+            self,
+            n_lags=60,
+            n_forecasts=20,
+            batch_size=None,
+            epochs=100,
+            num_gpus=0,
+            patience_early_stopping=10,
+            early_stop=True,
+            learning_rate=3e-2,
+            auto_lr_find=True,
+            num_workers=3,
+            loss_func="normaldistributionloss",
+            hidden_size=32,
+            rnn_layers=2,
+            dropout=0.1,
     ):
 
         self.batch_size = batch_size
@@ -60,6 +60,7 @@ class DeepAR:
         self.loss_func = loss_func
 
         self.fitted = False
+        self.freq = None
 
         if type(self.loss_func) == str:
             if self.loss_func.lower() in ["huber", "smoothl1", "smoothl1loss"]:
@@ -80,7 +81,7 @@ class DeepAR:
             raise NotImplementedError("Loss function {} not found".format(self.loss_func))
 
         self.metrics = metrics.MetricsCollection(
-            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(),],
+            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(), ],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
             ],
@@ -106,7 +107,7 @@ class DeepAR:
         return model
 
     def set_auto_batch_epoch(
-        self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
+            self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
     ):
         assert n_data >= 1
         log_data = np.log10(n_data)
@@ -115,9 +116,9 @@ class DeepAR:
             self.batch_size = min(max_batch, max(min_batch, self.batch_size))
             self.batch_size = min(n_data, self.batch_size)
 
-    def _create_dataset(self, df, freq, valid_p=0.2):
+    def _create_dataset(self, df, valid_p=0.2):
         df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
+        df = self._handle_missing_data(df)
         df = df[["ds", "y"]]
         df["time_idx"] = range(df.shape[0])
         df["series"] = 0
@@ -149,12 +150,11 @@ class DeepAR:
 
         return training, train_dataloader, val_dataloader
 
-    def _handle_missing_data(sefl, df, freq, predicting=False):
+    def _handle_missing_data(self, df, predicting=False):
         """Checks, auto-imputes and normalizes new data
 
         Args:
             df (pd.DataFrame): raw data with columns 'ds' and 'y'
-            freq (str): data frequency
             predicting (bool): when no lags, allow NA values in 'y' of forecast series or 'y' to miss completely
 
         Returns:
@@ -164,7 +164,7 @@ class DeepAR:
         impute_limit_linear = 5
         impute_rolling = 20
 
-        df, missing_dates = df_utils.add_missing_dates_nan(df, freq=freq)
+        df, missing_dates = df_utils.add_missing_dates_nan(df, freq=self.freq)
 
         # impute missing values
         data_columns = []
@@ -227,17 +227,17 @@ class DeepAR:
             return metrics_df
 
     def fit(self, df, freq, valid_p=0.2):
-
-        training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
+        self.freq = freq
+        training, train_dataloader, val_dataloader = self._create_dataset(df, valid_p)
         metrics_df = self._train(training, train_dataloader, val_dataloader)
         return metrics_df
 
-    def _hyperparameter_optimization(self, df, freq, valid_p=0.2):
-        training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
+    def _hyperparameter_optimization(self, df, valid_p=0.2):
+        training, train_dataloader, val_dataloader = self._create_dataset(df, valid_p)
         model = self._train(training, train_dataloader, val_dataloader, hyperparameter_optim=True)
         return train_dataloader, val_dataloader, model
 
-    def make_future_dataframe(self, df, freq, periods=0, n_historic_predictions=0):
+    def make_future_dataframe(self, df, periods=0, n_historic_predictions=0):
         """
         Creates a dataframe for prediction
         Args:
@@ -282,7 +282,7 @@ class DeepAR:
         df = df.copy(deep=True)
 
         df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
+        df = self._handle_missing_data(df)
         df = df[["ds", "y"]]
         df["time_idx"] = range(df.shape[0])
         df["series"] = 0
@@ -298,7 +298,8 @@ class DeepAR:
             decoder_data["time_idx"] = range(
                 decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
             )
-            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=freq)[1:]
+            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=self.freq)[
+                                 1:]
             future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
         elif periods == 0:
             future_dataframe = encoder_data
@@ -335,13 +336,7 @@ class DeepAR:
             add_target_scales=False,
         )
 
-        new_raw_predictions, new_x = self.model.predict(testing, mode="raw", return_x=True)
-        y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()  # [0, : new_x["decoder_lengths"][0]]
-        print(y_predicted.shape)
-        if self.prediction_length == 1:
-            y_predicted = y_predicted.detach().numpy()
-        else:
-            y_predicted = y_predicted.detach().numpy()[: -self.prediction_length + 1]
+        y_predicted = self.model.predict(testing, mode="prediction")  # , return_x=True)
 
         def pad_with(vector, pad_width, iaxis, kwargs):
             pad_value = kwargs.get("padder", np.nan)
@@ -352,7 +347,7 @@ class DeepAR:
                         self.prediction_length: -1, self.prediction_length: -self.prediction_length
                         ]
         y_pred_padded = np.vstack([np.roll(y_pred_padded[:, i], i, axis=0) for i in range(y_pred_padded.shape[1])]).T
-        print(y_pred_padded)
+
         result = pd.DataFrame(
             np.ones(shape=(len(future_dataframe), (2 + self.prediction_length))) * np.nan,
             columns=["ds", "y"] + [f"yhat{i}" for i in range(1, self.prediction_length + 1)],
@@ -387,4 +382,4 @@ class DeepAR:
             A matplotlib figure.
         """
 
-        return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize,)
+        return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize, )

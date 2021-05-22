@@ -6,7 +6,6 @@ import pandas as pd
 import torch
 import logging
 
-
 from neuralprophet.utils import df_utils
 from neuralprophet.tools import metrics
 from neuralprophet.tools.plot_forecast import plot
@@ -25,23 +24,23 @@ log = logging.getLogger("AdditionalModels.TFT")
 
 class TFT:
     def __init__(
-        self,
-        context_length=60,
-        output_size=20,
-        batch_size=None,
-        epochs=100,
-        num_gpus=0,
-        patience_early_stopping=10,
-        early_stop=True,
-        learning_rate=3e-2,
-        auto_lr_find=True,
-        num_workers=3,
-        loss_func="QuantileLoss",
-        hidden_size=32,
-        attention_head_size=1,
-        hidden_continuous_size=8,
-        # rnn_layers=2,
-        dropout=0.1,
+            self,
+            n_lags=60,
+            n_forecasts=20,
+            batch_size=None,
+            epochs=100,
+            num_gpus=0,
+            patience_early_stopping=10,
+            early_stop=True,
+            learning_rate=3e-2,
+            auto_lr_find=True,
+            num_workers=3,
+            loss_func="QuantileLoss",
+            hidden_size=32,
+            attention_head_size=1,
+            hidden_continuous_size=8,
+            # rnn_layers=2,
+            dropout=0.1,
     ):
 
         self.batch_size = batch_size
@@ -56,8 +55,8 @@ class TFT:
             self.auto_lr_find = False
         self.num_workers = num_workers
 
-        self.context_length = context_length
-        self.output_size = output_size
+        self.context_length = n_lags
+        self.prediction_length = n_forecasts
 
         self.hidden_size = hidden_size
         # self.rnn_layers = rnn_layers
@@ -67,6 +66,7 @@ class TFT:
         self.loss_func = loss_func
 
         self.fitted = False
+        self.freq = None
 
         if type(self.loss_func) == str:
             if self.loss_func.lower() in ["huber", "smoothl1", "smoothl1loss"]:
@@ -87,7 +87,7 @@ class TFT:
             raise NotImplementedError("Loss function {} not found".format(self.loss_func))
 
         self.metrics = metrics.MetricsCollection(
-            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(),],
+            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(), ],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
             ],
@@ -115,7 +115,7 @@ class TFT:
         return model
 
     def set_auto_batch_epoch(
-        self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
+            self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
     ):
         assert n_data >= 1
         log_data = np.log10(n_data)
@@ -124,9 +124,9 @@ class TFT:
             self.batch_size = min(max_batch, max(min_batch, self.batch_size))
             self.batch_size = min(n_data, self.batch_size)
 
-    def _create_dataset(self, df, freq, valid_p=0.2):
+    def _create_dataset(self, df, valid_p=0.2):
         df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
+        df = self._handle_missing_data(df)
         df = df[["ds", "y"]]
         df["time_idx"] = range(df.shape[0])
         df["series"] = 0
@@ -145,8 +145,8 @@ class TFT:
             group_ids=["series"],
             min_encoder_length=self.context_length,
             max_encoder_length=self.context_length,
-            max_prediction_length=self.output_size,
-            min_prediction_length=1,
+            max_prediction_length=self.prediction_length,
+            min_prediction_length=self.prediction_length,
             time_varying_known_reals=["time_idx"],
             time_varying_unknown_reals=["y"],
             target_normalizer=GroupNormalizer(groups=["series"], transformation="softplus", center=False),
@@ -162,11 +162,10 @@ class TFT:
 
         return training, train_dataloader, val_dataloader
 
-    def _handle_missing_data(sefl, df, freq, predicting=False):
+    def _handle_missing_data(self, df, predicting=False):
         """Checks, auto-imputes and normalizes new data
         Args:
             df (pd.DataFrame): raw data with columns 'ds' and 'y'
-            freq (str): data frequency
             predicting (bool): when no lags, allow NA values in 'y' of forecast series or 'y' to miss completely
         Returns:
             pre-processed df
@@ -175,7 +174,7 @@ class TFT:
         impute_limit_linear = 5
         impute_rolling = 20
 
-        df, missing_dates = df_utils.add_missing_dates_nan(df, freq=freq)
+        df, missing_dates = df_utils.add_missing_dates_nan(df, freq=self.freq)
 
         # impute missing values
         data_columns = []
@@ -237,51 +236,83 @@ class TFT:
             return metrics_df
 
     def fit(self, df, freq, valid_p=0.2):
-
-        training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
+        self.freq = freq
+        training, train_dataloader, val_dataloader = self._create_dataset(df, valid_p)
         # print(next(iter(train_dataloader)))
         metrics_df = self._train(training, train_dataloader, val_dataloader)
         return metrics_df
 
-    def _hyperparameter_optimization(self, df, freq, valid_p=0.2):
-        training, train_dataloader, val_dataloader = self._create_dataset(df, freq, valid_p)
+    def _hyperparameter_optimization(self, df, valid_p=0.2):
+        training, train_dataloader, val_dataloader = self._create_dataset(df, valid_p)
         model = self._train(training, train_dataloader, val_dataloader, hyperparameter_optim=True)
         return train_dataloader, val_dataloader, model
 
-    def make_future_dataframe(self, df, freq, periods=0, n_historic_predictions=0):
+    def make_future_dataframe(self, df, periods=0, n_historic_predictions=0):
         """
         Creates a dataframe for prediction
         Args:
             periods: number of future periods to forecast
             n_historic_predictions: number of historic_predictions to include in forecast
+
         Returns:
             future_dataframe: DataFrame, used further for prediction
         """
 
+        if isinstance(n_historic_predictions, bool):
+            if n_historic_predictions:
+                n_historic_predictions = len(df) - self.context_length
+            else:
+                n_historic_predictions = 0
+        elif not isinstance(n_historic_predictions, int):
+            log.error("non-integer value for n_historic_predictions set to zero.")
+            n_historic_predictions = 0
+        if periods == 0 and n_historic_predictions == 0:
+            raise ValueError("Set either history or future to contain more than zero values.")
+
+        if len(df) < self.context_length:
+            raise ValueError("Insufficient data for a prediction")
+        elif len(df) < self.context_length + n_historic_predictions:
+            log.warning(
+                "Insufficient data for {} historic forecasts, reduced to {}.".format(
+                    n_historic_predictions, len(df) - self.context_length
+                )
+            )
+            n_historic_predictions = len(df) - self.context_length
+
+        if periods > 0 and periods != self.prediction_length:
+            periods = self.prediction_length
+            log.warning(
+                "Number of forecast steps is defined by n_forecasts. " "Adjusted to {}.".format(self.prediction_length)
+            )
+
         self.periods = periods
+
         self.n_historic_predictions = n_historic_predictions
 
         df = df.copy(deep=True)
 
         df = df_utils.check_dataframe(df)
-        df = self._handle_missing_data(df, freq)
+        df = self._handle_missing_data(df)
         df = df[["ds", "y"]]
         df["time_idx"] = range(df.shape[0])
         df["series"] = 0
         self.n_data = df.shape[0]
 
         encoder_data = df[lambda x: x.time_idx > x.time_idx.max() - (self.context_length + n_historic_predictions)]
-        last_data = df[lambda x: x.time_idx == x.time_idx.max()]
-        decoder_data = pd.concat(
-            [last_data.assign(ds=lambda x: x.ds + pd.offsets.MonthBegin(i)) for i in range(1, periods + 1)],
-            ignore_index=True,
-        )
-        decoder_data["time_idx"] = range(
-            decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
-        )
-        decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=freq)[1:]
-        future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
-
+        if periods != 0:
+            last_data = df[lambda x: x.time_idx == x.time_idx.max()]
+            decoder_data = pd.concat(
+                [last_data.assign(ds=lambda x: x.ds + pd.offsets.MonthBegin(i)) for i in range(1, periods + 1)],
+                ignore_index=True,
+            )
+            decoder_data["time_idx"] = range(
+                decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
+            )
+            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=self.freq)[
+                                 1:]
+            future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
+        elif periods == 0:
+            future_dataframe = encoder_data
         return future_dataframe
 
     def predict(self, future_dataframe):
@@ -306,29 +337,51 @@ class TFT:
             group_ids=["series"],
             min_encoder_length=self.context_length,
             max_encoder_length=self.context_length,
-            max_prediction_length=self.periods + self.n_historic_predictions,
-            min_prediction_length=self.periods + self.n_historic_predictions,
+            max_prediction_length=self.prediction_length,
+            min_prediction_length=self.prediction_length,
             time_varying_known_reals=["time_idx"],
             time_varying_unknown_reals=["y"],
             target_normalizer=GroupNormalizer(groups=["series"], transformation="softplus", center=False),
-            randomize_length=None,
             add_relative_time_idx=True,
             add_target_scales=True,
             add_encoder_length=True,
         )
 
         new_raw_predictions, new_x = self.model.predict(testing, mode="raw", return_x=True)
-        y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()[0, : new_x["decoder_lengths"][0]]
+
+        y_predicted = self.model.to_prediction(new_raw_predictions).detach().cpu()  # [0, : new_x["decoder_lengths"][0]]
+
         y_predicted = y_predicted.detach().numpy()
 
-        future_dataframe.loc[len(future_dataframe) - self.periods :, "y"] = None
-        future_dataframe["yhat1"] = None
-        future_dataframe.loc[len(future_dataframe) - len(y_predicted) :, "yhat1"] = y_predicted
-        cols = ["ds", "y", "yhat1"]  # cols to keep from df
-        df_forecast = pd.concat((future_dataframe[cols],), axis=1)
-        df_forecast["residual1"] = df_forecast["yhat1"] - df_forecast["y"]
+        def pad_with(vector, pad_width, iaxis, kwargs):
+            pad_value = kwargs.get("padder", np.nan)
+            vector[: pad_width[0]] = pad_value
+            vector[-pad_width[1]:] = pad_value
 
-        return df_forecast
+        y_pred_padded = np.pad(y_predicted, self.prediction_length, pad_with)[
+                        self.prediction_length: -1, self.prediction_length: -self.prediction_length
+                        ]
+        y_pred_padded = np.vstack([np.roll(y_pred_padded[:, i], i, axis=0) for i in range(y_pred_padded.shape[1])]).T
+
+        result = pd.DataFrame(
+            np.ones(shape=(len(future_dataframe), (2 + self.prediction_length))) * np.nan,
+            columns=["ds", "y"] + [f"yhat{i}" for i in range(1, self.prediction_length + 1)],
+        )
+        result["ds"] = future_dataframe["ds"]
+
+        result.loc[: len(future_dataframe) - (self.periods + 1), "y"] = (
+            future_dataframe["y"].iloc[: len(future_dataframe) - (self.periods)].values
+        )
+
+        first_part = result.iloc[: self.context_length]
+        second_part = result.iloc[self.context_length:]
+
+        second_part.loc[:, [col for col in second_part.columns[2:]]] = y_pred_padded
+        result = pd.concat([first_part, second_part])
+        for i in range(1, self.prediction_length + 1):
+            result[f"residual{i}"] = result[f"yhat{i}"] - result["y"]
+
+        return result
 
     def plot(self, fcst, ax=None, xlabel="ds", ylabel="y", figsize=(10, 6)):
         """Plot the NeuralProphet forecast, including history.
@@ -342,4 +395,4 @@ class TFT:
             A matplotlib figure.
         """
 
-        return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize,)
+        return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize, )
