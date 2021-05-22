@@ -151,25 +151,15 @@ An example output of this function looks as follows:
 It can be used further directly into NeuralProphet configuration initialization.
 
 # LIBRA benchmarking
-
-In order to run the benchmarking the dataset should be downloaded.
-It is publicly available at [Zenodo](http://doi.org/10.5281/zenodo.4399959).
-The easiest way to download it is via `zenodo-get`.
-
-First, you need to install it via the following command:
-
-```
-pip3 install zenodo_get
-```
-
-Further, to download this particular dataset use the following command line:
-
-```
-zenodo_get 10.5281/zenodo.4399959
-```
-
+The dataset we provide in `example_data/LIBRA/` is the dataset on which results are evaluated.
 It contains 400 time series from four domains: economics, finance, human, or nature.
+We ran benchmarking on part of datasets, as models we want to test are deep and time series in these datasets are mostly large.
+In order to run the small version of benchmarking, see the `example_notebooks/LIBRA.ipynb`. 
+Small run of LIBRA is also being run during the debagging procedure. 
+In order to convert the results into nice latex tables, see the `example_notebooks/evaluation_results.ipynb`.
+Please, note, that benchmarking takes a lot of time even for small run.
 
+More details on the results of benchmarking are available in our Third Status Report.
 
 
 # Testing the working code
