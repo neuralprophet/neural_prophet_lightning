@@ -44,7 +44,7 @@ It is supported by Pytorch Lightning Trainer module by default and allows for di
 We introduced LSTM model, as a part of additional models modules.
 It is based on refactored into Pytorch Lightning LSTM model from pure Pytorch.
 For LSTM, the main class has the same functionality as the NeuralProphet and supports all main methods. 
-An example of LSTM usage can be foung in `example_notebooks/LSTM_example.ipynb` notebook.
+An example of LSTM usage can be foung in `example_notebooks/LSTM_example.ipynb`(example_notebooks/LSTM_example.ipynb) notebook.
 
 Here is the example of using LSTM module:
 ```
