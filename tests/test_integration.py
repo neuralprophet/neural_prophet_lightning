@@ -651,20 +651,19 @@ class IntegrationTests(unittest.TestCase):
 
     def test_ray_tune(self):
         log.info("TEST Ray")
-        df = pd.read_csv(YOS_FILE, nrows=3)
+        df = pd.read_csv(YOS_FILE, nrows=NROWS)
         freq = '5min'
         from ray import tune
 
-        config = {'n_lags': tune.grid_search([10, 20, 30]),
-                  'learning_rate': tune.loguniform(1e-4, 1e-1),
-                  'num_hidden_layers': tune.choice([2, 8, 16])}
+        config = {'n_lags': tune.grid_search([10, 30]),
+                  'num_hidden_layers': tune.choice([2, 4])}
         best_params, results_df = tune_hyperparameters('NP', df, freq, mode='manual', num_samples=3, config=config)
 
     def test_Libra(self):
         log.info("TEST Libra")
         usecase = 'economics'
         datasets, frequencies = get_datasets(usecase)
-        methods = ['1step', 'multistep']
+        methods = ['onestep', 'multistep']
         metrics = libra(n_datasets=1, datasets=datasets, frequencies=frequencies,
                         method=methods[0], n_epochs=1, usecase=usecase)
 

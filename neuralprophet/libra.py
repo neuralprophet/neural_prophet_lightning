@@ -8,31 +8,17 @@ from neuralprophet.tools.metrics_libra import *
 
 def get_datasets(usecase, data_loc = '../example_data/LIBRA/'):
     datasets = os.listdir(data_loc)
-    datasets_economics = [dataset for dataset in datasets if 'economics' in dataset]
-    datasets_finance = [dataset for dataset in datasets if 'finance' in dataset]
-    datasets_human = [dataset for dataset in datasets if 'human' in dataset]
-    datasets_nature = [dataset for dataset in datasets if 'nature' in dataset]
-
+    datasets_names = [dataset for dataset in datasets if usecase in dataset]
     datasets = {}
 
-    if usecase == 'economics':
-        for dataset in datasets_economics:
-            datasets.update({dataset: pd.read_csv(data_loc + dataset)})
-    elif usecase == 'finance':
-        for dataset in datasets_finance:
-            datasets.update({dataset: pd.read_csv(data_loc + dataset)})
-    elif usecase == 'human':
-        for dataset in datasets_human:
-            datasets.update({dataset: pd.read_csv(data_loc + dataset)})
-    elif usecase == 'nature':
-        for dataset in datasets_nature:
-            datasets.update({dataset: pd.read_csv(data_loc + dataset)})
+    for dataset in datasets_names:
+        datasets.update({dataset: pd.read_csv(data_loc + dataset)})
 
     frequencies = pd.read_csv(data_loc + 'freq.csv')
     return datasets, frequencies
 
 
-mapping_frequencies_economics = {
+mapping_interpretable_frequencies = {
     1: 'D',
     4: 'Q',
     12: 'M',
@@ -54,7 +40,7 @@ mapping_frequencies_economics = {
 
 def mapping(x):
     try:
-        return mapping_frequencies_economics[x]
+        return mapping_interpretable_frequencies[x]
     except:
         return 'D'
 
@@ -63,10 +49,8 @@ def get_parameters(df, dataset_name, frequencies, method, usecase):
     idx_ts = int(dataset_name.split('.')[0].split('_')[-1]) - 1
     n_lags = frequencies.iloc[idx_ts][[col for col in frequencies.columns if usecase in col][0]]
     freq = mapping(frequencies.iloc[idx_ts][[col for col in frequencies.columns if usecase in col][0]])
-    #if len(df) == 372864:
-    #    freq = 'H'
-    #    n_epochs = 15
-    if method == '1step':
+
+    if method == 'onestep':
         n_forecasts = 1
     elif method == 'multistep':
         n_forecasts = int(np.amin((int(0.2 * len(df)), n_lags)))
@@ -75,7 +59,6 @@ def get_parameters(df, dataset_name, frequencies, method, usecase):
               'freq': freq,
               'n_forecasts':n_forecasts}
     return params
-
 
 
 def benchmark(model, method, df, params, one_dataset_metrics, n_epochs):
@@ -145,7 +128,7 @@ def benchmark(model, method, df, params, one_dataset_metrics, n_epochs):
         print('error')
 
 
-def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase):
+def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase, save_res = True):
     metrics = {}
     for i, (dataset_name, df) in enumerate(datasets.items()):
         if i >= n_datasets:
@@ -156,12 +139,15 @@ def libra(n_datasets, datasets, frequencies, method, n_epochs, usecase):
             params = get_parameters(df, dataset_name, frequencies, method, usecase)
             benchmark(model, method, df, params, one_dataset_metrics, n_epochs)
         metrics.update({dataset_name: one_dataset_metrics})
+    if save_res:
+        loc_res = '../results_benchmarking/'
+        pd.DataFrame(metrics).to_csv(loc_res + f'results_libra_{method}_{usecase}.csv')
     return metrics
 
 
 if __name__ == '__main__':
     usecase = 'economics'
     datasets, frequencies = get_datasets(usecase)
-    methods = ['1step', 'multistep']
+    methods = ['onestep', 'multistep']
     metrics = libra(2, datasets, frequencies, methods[0], n_epochs=2, usecase=usecase)
     print(metrics)
