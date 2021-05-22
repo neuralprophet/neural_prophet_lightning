@@ -23,7 +23,6 @@ class LightDeepAR(DeepAR):
         y_hat = self.to_prediction(out)
         y = y[0]
 
-        assert len(log["loss"].size()) >= 1
         self.log("train_loss", log["loss"], on_step=True, on_epoch=True, prog_bar=False)
         if type(self.forecaster) != type(None):
             self.forecaster.metrics.update(predicted=y_hat.detach(), target=y.detach(), values={"Loss": log["loss"]})

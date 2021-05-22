@@ -382,3 +382,4 @@ class NBeats:
 
         return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize,)
 
+
