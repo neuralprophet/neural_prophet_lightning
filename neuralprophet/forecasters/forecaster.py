@@ -6,20 +6,16 @@ import pandas as pd
 
 import torch
 from torch.utils.data import DataLoader
-from torch import optim
 import logging
 from tqdm import tqdm
 
-from neuralprophet import configure
-from neuralprophet import time_net
-from neuralprophet import time_dataset
-from neuralprophet import df_utils
-from neuralprophet import utils
-from neuralprophet import utils_torch
-from neuralprophet.plot_forecast import plot, plot_components
-from neuralprophet.plot_model_parameters import plot_parameters
-from neuralprophet import metrics
-from neuralprophet.utils import set_logger_level
+from neuralprophet.models import time_net
+from neuralprophet.dataset import time_dataset
+from neuralprophet.utils import utils
+from neuralprophet.tools.plot_forecast import plot, plot_components
+from neuralprophet.tools.plot_model_parameters import plot_parameters
+from neuralprophet.utils import utils_torch, df_utils
+from neuralprophet.tools import configure, metrics
 from pytorch_lightning import Trainer
 
 log = logging.getLogger("NP.forecaster")

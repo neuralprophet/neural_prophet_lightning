@@ -169,28 +169,76 @@ Here we present the structure of repository and the files which were changed or 
     ├── MANIFEST.in
     ├── README.md
     ├── docs
+    │   ├── model
+    │   │   ├── auto-regression.md
+    │   │   ├── events.md
+    │   │   ├── future-regressors.md
+    │   │   ├── lagged-regressors.md
+    │   │   ├── seasonality.md
+    │   │   └── trend.md
+    │   ├── model-overview.md
     ├── example_data
     ├── example_notebooks
+    │   ├── DeepAR_example.ipynb
+    │   ├── LIBRA_try_1.ipynb
     │   ├── LSTM_example.ipynb
     │   ├── NBeats_example.ipynb
-    │   ├── DeepAR_example.ipynb
-    │   ├── hyperparameter_example.ipynb
+    │   ├── TFT_example.ipynb
+    │   ├── hyperparameter_optimization_example.ipynb
     ├── mkdocs.yml
     ├── neuralprophet
     │   ├── __init__.py
-    │   ├── additional_models.py
-    │   ├── configure.py
-    │   ├── forecaster.py
-    │   ├── forecaster_additional_models.py
+    │   ├── dataset
+    │   │   ├── __init__.py
+    │   │   └── time_dataset.py
+    │   ├── forecasters
+    │   │   ├── __init__.py
+    │   │   ├── forecaster.py
+    │   │   ├── forecaster_DeepAR.py
+    │   │   ├── forecaster_LSTM.py
+    │   │   ├── forecaster_NBeats.py
+    │   │   ├── forecaster_NBeats_old.py
+    │   │   └── forecaster_TFT.py
     │   ├── hyperparameter_tuner.py
-    │   ├── time_net.py
+    │   ├── models
+    │   │   ├── DeepAR.py
+    │   │   ├── LSTM.py
+    │   │   ├── NBeats.py
+    │   │   ├── TFT.py
+    │   │   ├── __init__.py
+    │   │   └── time_net.py
+    │   ├── tools
+    │   │   ├── __init__.py
+    │   │   ├── configure.py
+    │   │   ├── hdays.py
+    │   │   ├── metrics.py
+    │   │   ├── plot_forecast.py
+    │   │   └── plot_model_parameters.py
+    │   └── utils
+    │       ├── __init__.py
+    │       ├── df_utils.py
+    │       ├── utils.py
+    │       └── utils_torch.py
     ├── notes
     ├── peer_reviews
+    │   ├── First_peer_review_report_Cohortney.pdf
+    │   ├── First_peer_review_report_FES.pdf
+    │   ├── First_peer_review_report_MMDF.pdf
+    │   ├── Second_peer_review_report_Cohortney.pdf
+    │   ├── Second_peer_review_report_FES.pdf
+    │   └── Second_peer_review_report_MMDF.pdf
     ├── pyproject.toml
+    ├── reports
+    │   ├── Report_TFDS.pdf
+    │   └── Second_Status_Report_TFDS.pdf
     ├── requirements.txt
+    ├── roadmap_gantt.png
     ├── scripts
     ├── setup.py
     └── tests
+        ├── debug.py
+        ├── test_integration.py
+        └── test_unit.py
 ``` 
 
 ## Distribution of roles and roadmap
