@@ -179,7 +179,8 @@ It runs automatically with commit, when the library is installed in the dev vers
 However, one can always run the debug script to check the pipeline.
 In order to do so, use the following command from the root directory of the project
 ```bash
-python tests/debug.py
+cd tests
+python debug.py
 ```
 
 
