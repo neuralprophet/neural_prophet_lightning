@@ -69,11 +69,10 @@ An example of NBeats usage can be foung in `example_notebooks/NBeats_example.ipy
 
 Here is the example of using NBeats module:
 ```
-m = NBeatsNP(
-        max_encoder_length = 150,
-        epochs = 100,
-        num_gpus = 0,
-        auto_lr_find=True)
+m = NBeatsNP(n_lags = 10,
+             n_forecasts=1,
+             epochs = 100,
+             auto_lr_find=True)
 m.fit(df, freq = '5min')
 future = m.make_future_dataframe(df, preiods = 7, n_historic_predictions=10)
 forecast = m.predict(future)
@@ -86,16 +85,32 @@ An example of DeepAR usage can be foung in `example_notebooks/DeepAR_example.ipy
 
 Here is the example of using DeepAR module:
 ```
-deepar = DeepAR(
-        context_length=60,
-        prediction_length=20,
-        epochs = 100,
-        num_gpus = 0,
-        patience_early_stopping = 10,
-        early_stop = True,
-        auto_lr_find=True)
+m = DeepAR(n_lags = 10,
+           n_forecasts=7,
+           epochs = 100)
 m.fit(df, freq = '5min')
 future = m.make_future_dataframe(df, preiods = 7, n_historic_predictions=10)
+forecast = m.predict(future)
+```
+
+### TFT
+We also introduced TFT model. 
+It is based on the Pytorch Forecasting model implementation. 
+We refactored existing model code to support NeuralProphet Metric class. 
+We also created a new wrapper class, which has the same main modules as NeuralProphet 
+and can be used with the same API. 
+An example of TFT usage can be found in `example_notebooks/TFT_example.ipynb` notebook.
+
+Here is the example of using NBeats module:
+
+```
+m = TFT(n_lags=60,
+        n_forecasts=20,
+        epochs = 100,
+        attention_head_size=1,
+        hidden_continuous_size=8)
+m.fit(df, freq = '5min')
+future = m.make_future_dataframe(df, preiods = 20, n_historic_predictions=10)
 forecast = m.predict(future)
 ```
 
@@ -170,17 +185,12 @@ Here we present the structure of repository and the files which were changed or 
     ├── README.md
     ├── docs
     │   ├── model
-    │   │   ├── auto-regression.md
-    │   │   ├── events.md
-    │   │   ├── future-regressors.md
-    │   │   ├── lagged-regressors.md
-    │   │   ├── seasonality.md
-    │   │   └── trend.md
-    │   ├── model-overview.md
+    │   │   ├── additional_models.md
+    │   │   ├── hyperparameter_optimization.md
     ├── example_data
     ├── example_notebooks
     │   ├── DeepAR_example.ipynb
-    │   ├── LIBRA_try_1.ipynb
+    │   ├── LIBRA.ipynb
     │   ├── LSTM_example.ipynb
     │   ├── NBeats_example.ipynb
     │   ├── TFT_example.ipynb
@@ -221,16 +231,8 @@ Here we present the structure of repository and the files which were changed or 
     │       └── utils_torch.py
     ├── notes
     ├── peer_reviews
-    │   ├── First_peer_review_report_Cohortney.pdf
-    │   ├── First_peer_review_report_FES.pdf
-    │   ├── First_peer_review_report_MMDF.pdf
-    │   ├── Second_peer_review_report_Cohortney.pdf
-    │   ├── Second_peer_review_report_FES.pdf
-    │   └── Second_peer_review_report_MMDF.pdf
     ├── pyproject.toml
     ├── reports
-    │   ├── Report_TFDS.pdf
-    │   └── Second_Status_Report_TFDS.pdf
     ├── requirements.txt
     ├── roadmap_gantt.png
     ├── scripts
