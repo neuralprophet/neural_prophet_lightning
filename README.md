@@ -173,6 +173,16 @@ It contains 400 time series from four domains: economics, finance, human, or nat
 
 
 
+# Testing the working code
+
+In order to test the code, we have added necessary tests for all new functional into tests module.
+It runs automatically with commit, when the library is installed in the dev version.
+However, one can always run the debug script to check the pipeline.
+In order to do so, use the following command from the root directory of the project
+```bash
+python tests/debug.py
+```
+
 
 ## Repository structure:
 In this work we follow the original repository structure of NeuralProphet in order to preserve the existing functionality.
