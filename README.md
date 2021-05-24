@@ -41,7 +41,9 @@ We have added a new parameter to NeuralProphet which is number of GPUs used for 
 It is supported by Pytorch Lightning Trainer module by default and allows for distributed training on GPUs, which was not originally possible.
 
 In order to install NeuralProphet library, use the following command in the root of repository:
-```pip install .```
+```
+pip install .
+```
 
 ### LSTM
 We introduced LSTM model, as a part of additional models modules.
