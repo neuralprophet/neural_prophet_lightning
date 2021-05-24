@@ -7,6 +7,12 @@ The main aim of this project is to improve NeuralProphet Library.
 [Third status report](reports/Third_Status_Report_TFDS.pdf) is contained in the repository.
 
 ## For peer reviewers:
+
+In order to install NeuralProphet library, use the following command in the root of repository:
+```
+pip install .
+```
+
 In order to evaluate, whether the library works and reproduce the results, we suggest following steps.
 The first part, is running all models on the sample data and checking that it works.
 For this, you can either rerun the example notebooks for each model, or use the sample small test run code we provide in [this file](example_run.py).
@@ -56,11 +62,6 @@ We refactor existing code of TimeNet and NeuralProphet itself in Pytorch Lightni
 We preserved the full original structure and functionality. 
 We have added a new parameter to NeuralProphet which is number of GPUs used for train.
 It is supported by Pytorch Lightning Trainer module by default and allows for distributed training on GPUs, which was not originally possible.
-
-In order to install NeuralProphet library, use the following command in the root of repository:
-```
-pip install .
-```
 
 ### LSTM
 We introduced LSTM model, as a part of additional models modules.
