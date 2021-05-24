@@ -6,6 +6,23 @@ The main aim of this project is to improve NeuralProphet Library.
 
 [Third status report](reports/Third_Status_Report_TFDS.pdf) is contained in the repository.
 
+## For peer reviewers:
+In order to evaluate, whether the library works and reproduce the results, we suggest following steps.
+The first part, is running all models on the sample data and checking that it works.
+For this, you can either rerun the example notebooks for each model, or use the sample small test run code we provide in [this file](example_run.py).
+Note, that rerunning the models takes time and computational resourses, especially for complex models.
+
+Second part, is testing the whole code parte, which is provided in tests module.
+This can be run using 
+```bash
+cd tests
+python debug.py
+```
+
+The benchmarking part is very big and takes a lot of time to rerun it. 
+The results, that are already available in ```results_benchmarking``` took 4 hours to be computed.
+Therefore, we suggest to check the results using the small code we provide in [Libra_example notebook](example_notebooks/LIBRA_example.ipynb).
+
 ### Project outline
 - **Refactor the code** with **PyTorch Lightning** in accordance with existing API
 - Adapt and **include** existing implementations of **SOTA models for time series forecasting** under the NeuralProphet API
@@ -177,6 +194,8 @@ In order to do so, use the following command from the root directory of the proj
 cd tests
 python debug.py
 ```
+
+
 
 
 ## Repository structure:
