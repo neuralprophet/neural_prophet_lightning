@@ -9,13 +9,13 @@ df = df.iloc[:1000]
 
 # runs NeuralProphet on sample data
 
-m = NeuralProphet(n_lags=12, n_forecasts=3, epochs=10, learning_rate=1.0,)
-metrics_NP = m.fit(df, freq="5min")
+m = NeuralProphet(n_lags=12, n_forecasts=3, epochs=10, learning_rate=1)
+metrics_NP = m.fit(df, freq="5min", validate_each_epoch=True)
 
 # print(metrics)
 
 m = LSTM(n_lags=12, n_forecasts=3, num_hidden_layers=1, d_hidden=64, learning_rate=1, epochs=10)
-metrics_LSTM = m.fit(df, freq="5min")
+metrics_LSTM = m.fit(df, freq="5min", validate_each_epoch=True)
 
 
 
