@@ -8,19 +8,6 @@
 ```
 ├── neuralprophet
 │   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-38.pyc
-│   │   ├── configure.cpython-38.pyc
-│   │   ├── df_utils.cpython-38.pyc
-│   │   ├── forecaster.cpython-38.pyc
-│   │   ├── hdays.cpython-38.pyc
-│   │   ├── metrics.cpython-38.pyc
-│   │   ├── plot_forecast.cpython-38.pyc
-│   │   ├── plot_model_parameters.cpython-38.pyc
-│   │   ├── time_dataset.cpython-38.pyc
-│   │   ├── time_net.cpython-38.pyc
-│   │   ├── utils.cpython-38.pyc
-│   │   └── utils_torch.cpython-38.pyc
 │   ├── configure.py
 │   ├── df_utils.py
 │   ├── forecaster.py
