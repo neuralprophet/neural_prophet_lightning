@@ -29,20 +29,12 @@ class NBeats:
         batch_size=None,
         epochs=100,
         weight_decay=1e-2,
-        num_gpus=0,
         patience_early_stopping=10,
         early_stop=True,
         learning_rate=3e-2,
         auto_lr_find=False,
         num_workers=3,
-        loss_func='huber',
-        from_dataset=True,
-        stack_types=["trend", "seasonality"],
-        num_blocks=[3, 3],
-        num_block_layers=[3, 3],
-        widths=[32, 512],
-        sharing=[True, True],
-        expansion_coefficient_lengths=[3, 7],
+        loss_func='huber'
     ):
         """
         Args:
@@ -51,7 +43,6 @@ class NBeats:
             n_forecasts: int - Number of time units that the model predicts
             batch_size: int, — batch_size. If set to None, automatic batch size will be set
             epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
-            num_gpus: int, — number of gpus to use
             patience_early_stopping: int, — patience parameter of EarlyStopping callback
             early_stop: bool, — whether to use EarlyStopping callback
             weight_decay: float, — weight_decay parameter for NBeats model
@@ -59,34 +50,12 @@ class NBeats:
             auto_lr_find: bool, — whether to use automatic laerning rate finder
             num_workers: int, — number of workers for DataLoaders
             loss_func: str, ['huber', 'MSE'] — what loss function will be used
-            from_dataset bool: whether to initialize parameters automatically based on dataset, or used custom
-            stack_types: One of the following values: “generic”, “seasonality" or “trend". A list of strings
-                of length 1 or ‘num_stacks’. Default and recommended value
-                for generic mode: [“generic”] Recommended value for interpretable mode: [“trend”,”seasonality”]
-            num_blocks: The number of blocks per stack. A list of ints of length 1 or ‘num_stacks’.
-                Default and recommended value for generic mode: [1] Recommended value for interpretable mode: [3]
-            num_block_layers: Number of fully connected layers with ReLu activation per block. A list of ints of length
-                1 or ‘num_stacks’.
-                Default and recommended value for generic mode: [4] Recommended value for interpretable mode: [4]
-            width: Widths of the fully connected layers with ReLu activation in the blocks.
-                A list of ints of length 1 or ‘num_stacks’. Default and recommended value for generic mode: [512]
-                Recommended value for interpretable mode: [256, 2048]
-            sharing: Whether the weights are shared with the other blocks per stack.
-                A list of ints of length 1 or ‘num_stacks’. Default and recommended value for generic mode: [False]
-                Recommended value for interpretable mode: [True]
-            expansion_coefficient_length: If the type is “G” (generic), then the length of the expansion
-                coefficient.
-                If type is “T” (trend), then it corresponds to the degree of the polynomial. If the type is “S”
-                (seasonal) then this is the minimum period allowed, e.g. 2 for changes every timestep.
-                A list of ints of length 1 or ‘num_stacks’. Default value for generic mode: [32] Recommended value for
-                interpretable mode: [3]
         """
 
         self.batch_size = batch_size
         self.weight_decay = weight_decay
 
         self.epochs = epochs
-        self.num_gpus = num_gpus
         self.patience_early_stopping = patience_early_stopping
         self.early_stop = early_stop
         self.learning_rate = learning_rate
@@ -229,7 +198,6 @@ class NBeats:
 
         self.trainer = pl.Trainer(
             max_epochs=self.epochs,
-            gpus=self.num_gpus,
             weights_summary="top",
             gradient_clip_val=0.1,
             callbacks=callbacks,
