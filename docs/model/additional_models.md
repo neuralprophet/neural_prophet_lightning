@@ -36,7 +36,6 @@ m = NBeats(
         n_lags = 150,
         n_forecasts = 1,
         epochs = 100,
-        num_gpus = 0,
         auto_lr_find=True)
 m.fit(df, freq = '5min')
 future = m.make_future_dataframe(df, preiods = 1, n_historic_predictions=10)
