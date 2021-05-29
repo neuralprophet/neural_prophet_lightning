@@ -4,25 +4,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen)](https://opensource.org/licenses/MIT)
 
-
-```
-├── neuralprophet
-│   ├── __init__.py
-│   ├── configure.py
-│   ├── df_utils.py
-│   ├── forecaster.py
-│   ├── hdays.py
-│   ├── metrics.py
-│   ├── plot_forecast.py
-│   ├── plot_model_parameters.py
-│   ├── time_dataset.py
-│   ├── time_net.py
-│   ├── utils.py
-│   └── utils_torch.py
-```
-
-
-
 Please note that the project is still in beta phase. Please report any issues you encounter or suggestions you have. We will do our best to address them quickly. Contributions are very welcome!
 
 ![NP-logo-wide_cut](https://user-images.githubusercontent.com/21246060/111388960-6c367e80-866d-11eb-91c1-46f2c0d21879.PNG)
