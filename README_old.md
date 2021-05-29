@@ -6,23 +6,18 @@
 
 
 ```
-├── neuralprophet
-│   ├── dataset
-│   │   └── time_dataset.py
-│   ├── forecasters
-│   │   ├── forecaster.py
-│   ├── models
-│   │   └── time_net.py
-│   ├── tools
-│   │   ├── configure.py
-│   │   ├── hdays.py
-│   │   ├── metrics.py
-│   │   ├── plot_forecast.py
-│   │   └── plot_model_parameters.py
-└── └── utils
-        ├── df_utils.py
-        ├── utils.py
-        └── utils_torch.py
+└── neuralprophet
+    ├── configure.py
+    ├── df_utils.py
+    ├── forecaster.py
+    ├── hdays.py
+    ├── metrics.py
+    ├── plot_forecast.py
+    ├── plot_model_parameters.py
+    ├── time_dataset.py
+    ├── time_net.py
+    ├── utils.py
+    └── utils_torch.py
 
 
 ```
