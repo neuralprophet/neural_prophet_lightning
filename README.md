@@ -220,6 +220,7 @@ Here we present the structure of repository and the files which were changed or 
     │   ├── LSTM_example.ipynb
     │   ├── NBeats_example.ipynb
     │   ├── TFT_example.ipynb
+    │   ├── NeuralProphet_example.ipynb
     │   ├── evaluation_results.ipynb
     │   ├── hyperparameter_optimization_example.ipynb
     ├── neuralprophet
