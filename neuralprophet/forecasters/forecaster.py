@@ -148,11 +148,7 @@ class NeuralProphet:
         self.gpus = gpus
 
         self.metrics = metrics.MetricsCollection(
-            metrics=[
-                metrics.LossMetric(self.config_train.loss_func),
-                metrics.MAE(),
-                metrics.MSE(),
-            ],
+            metrics=[metrics.LossMetric(self.config_train.loss_func), metrics.MAE(), metrics.MSE(),],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
                 metrics.ValueMetric("RegLoss"),
@@ -309,9 +305,7 @@ class NeuralProphet:
                         remaining_na = 0
                     else:
                         df.loc[:, column], remaining_na = df_utils.fill_linear_then_rolling_avg(
-                            df[column],
-                            limit_linear=self.impute_limit_linear,
-                            rolling=self.impute_rolling,
+                            df[column], limit_linear=self.impute_limit_linear, rolling=self.impute_rolling,
                         )
                     log.info("{} NaN values in column {} were auto-imputed.".format(sum_na - remaining_na, column))
                     if remaining_na > 0:
@@ -468,8 +462,7 @@ class NeuralProphet:
             l_trend = self.config_trend.trend_reg
             if self.config_trend.n_changepoints > 0 and l_trend is not None and l_trend > 0:
                 reg_trend = utils.reg_func_trend(
-                    weights=self.model.get_trend_deltas,
-                    threshold=self.config_train.trend_reg_threshold,
+                    weights=self.model.get_trend_deltas, threshold=self.config_train.trend_reg_threshold,
                 )
                 reg_loss += l_trend * reg_trend
 
@@ -549,10 +542,7 @@ class NeuralProphet:
             self.val_metrics.reset()
 
         self.trainer = Trainer(
-            max_epochs=self.config_train.epochs,
-            checkpoint_callback=False,
-            logger=False,
-            gpus = self.gpus
+            max_epochs=self.config_train.epochs, checkpoint_callback=False, logger=False, gpus=self.gpus
         )
 
         if hyperparameter_optim:
@@ -634,11 +624,7 @@ class NeuralProphet:
         df = df_utils.check_dataframe(df, check_y=False)
         df = self._handle_missing_data(df, freq=freq, predicting=False)
         df_train, df_val = df_utils.split_df(
-            df,
-            n_lags=self.n_lags,
-            n_forecasts=self.n_forecasts,
-            valid_p=valid_p,
-            inputs_overbleed=True,
+            df, n_lags=self.n_lags, n_forecasts=self.n_forecasts, valid_p=valid_p, inputs_overbleed=True,
         )
         return df_train, df_val
 
@@ -858,9 +844,7 @@ class NeuralProphet:
                 assert name in self.events_config
             df = df_utils.check_dataframe(df)
             df_out = df_utils.convert_events_to_features(
-                df.copy(deep=True),
-                events_config=self.events_config,
-                events_df=events_df.copy(deep=True),
+                df.copy(deep=True), events_config=self.events_config, events_df=events_df.copy(deep=True),
             )
 
         return df_out.reset_index(drop=True)
@@ -1055,9 +1039,7 @@ class NeuralProphet:
         if self.config_covar is None:
             self.config_covar = OrderedDict({})
         self.config_covar[name] = configure.Covar(
-            reg_lambda=regularization,
-            normalize=normalize,
-            as_scalar=only_last_value,
+            reg_lambda=regularization, normalize=normalize, as_scalar=only_last_value,
         )
         return self
 
@@ -1277,11 +1259,7 @@ class NeuralProphet:
             A matplotlib figure.
         """
         return plot_components(
-            m=self,
-            fcst=fcst,
-            figsize=figsize,
-            forecast_in_focus=self.highlight_forecast_step_n,
-            residuals=residuals,
+            m=self, fcst=fcst, figsize=figsize, forecast_in_focus=self.highlight_forecast_step_n, residuals=residuals,
         )
 
     def plot_parameters(self, weekly_start=0, yearly_start=0, figsize=None):

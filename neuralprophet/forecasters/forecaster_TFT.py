@@ -24,32 +24,29 @@ log = logging.getLogger("AdditionalModels.TFT")
 
 class TFT:
     def __init__(
-            self,
-            n_lags=60,
-            n_forecasts=20,
-            batch_size=None,
-            epochs=100,
-            num_gpus=0,
-            patience_early_stopping=10,
-            early_stop=True,
-            learning_rate=3e-2,
-            auto_lr_find=True,
-            num_workers=3,
-            loss_func="QuantileLoss",
-            hidden_size=32,
-            attention_head_size=1,
-            hidden_continuous_size=8,
-
-            dropout=0.1,
+        self,
+        n_lags=60,
+        n_forecasts=20,
+        batch_size=None,
+        epochs=100,
+        patience_early_stopping=10,
+        early_stop=True,
+        learning_rate=3e-2,
+        auto_lr_find=True,
+        num_workers=3,
+        loss_func="QuantileLoss",
+        hidden_size=32,
+        attention_head_size=1,
+        hidden_continuous_size=8,
+        dropout=0.1,
     ):
-        '''
+        """
         Args:
             n_lags: int, — Number of time units that condition the predictions. Also known as 'lookback period'.
                 Should be between 1-10 times the prediction length. Can be seen as equivalent for n_lags in NP
             n_forecasts: int - Number of time units that the model predicts
             batch_size: int, — batch_size. If set to None, automatic batch size will be set
             epochs: int, — number of epochs for training. Will be overwritten, if EarlyStopping is applied
-            num_gpus: int, — number of gpus to use
             patience_early_stopping: int, — patience parameter of EarlyStopping callback
             early_stop: bool, — whether to use EarlyStopping callback
             learning_rate: float, — learning rate for the model. Will be overwritten, if auto_lr_find is used
@@ -61,12 +58,11 @@ class TFT:
             attention_head_size: int, number of attention heads, lager values (up to 8) for large amount of data
             hidden_continuous_size: int, dictionary mapping continuous input indices to sizes for variable selection
             dropout: dropout in RNN layers, should be between 0 and 1.
-        '''
+        """
 
         self.batch_size = batch_size
 
         self.epochs = epochs
-        self.num_gpus = num_gpus
         self.patience_early_stopping = patience_early_stopping
         self.early_stop = early_stop
         self.learning_rate = learning_rate
@@ -106,7 +102,7 @@ class TFT:
             raise NotImplementedError("Loss function {} not found".format(self.loss_func))
 
         self.metrics = metrics.MetricsCollection(
-            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(), ],
+            metrics=[metrics.LossMetric(torch.nn.SmoothL1Loss()), metrics.MAE(), metrics.MSE(),],
             value_metrics=[
                 # metrics.ValueMetric("Loss"),
             ],
@@ -134,7 +130,7 @@ class TFT:
         return model
 
     def set_auto_batch_epoch(
-            self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
+        self, n_data: int, min_batch: int = 16, max_batch: int = 256, min_epoch: int = 40, max_epoch: int = 400,
     ):
         assert n_data >= 1
         log_data = np.log10(n_data)
@@ -224,7 +220,6 @@ class TFT:
 
         self.trainer = pl.Trainer(
             max_epochs=self.epochs,
-            gpus=self.num_gpus,
             weights_summary="top",
             gradient_clip_val=0.1,
             callbacks=callbacks,
@@ -328,7 +323,8 @@ class TFT:
                 decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
             )
             decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=self.freq)[
-                                 1:]
+                1:
+            ]
             future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
         elif periods == 0:
             future_dataframe = encoder_data
@@ -375,11 +371,11 @@ class TFT:
         def pad_with(vector, pad_width, iaxis, kwargs):
             pad_value = kwargs.get("padder", np.nan)
             vector[: pad_width[0]] = pad_value
-            vector[-pad_width[1]:] = pad_value
+            vector[-pad_width[1] :] = pad_value
 
         y_pred_padded = np.pad(y_predicted, self.prediction_length, pad_with)[
-                        self.prediction_length: -1, self.prediction_length: -self.prediction_length
-                        ]
+            self.prediction_length : -1, self.prediction_length : -self.prediction_length
+        ]
         y_pred_padded = np.vstack([np.roll(y_pred_padded[:, i], i, axis=0) for i in range(y_pred_padded.shape[1])]).T
 
         result = pd.DataFrame(
@@ -393,7 +389,7 @@ class TFT:
         )
 
         first_part = result.iloc[: self.context_length]
-        second_part = result.iloc[self.context_length:]
+        second_part = result.iloc[self.context_length :]
 
         second_part.loc[:, [col for col in second_part.columns[2:]]] = y_pred_padded
         result = pd.concat([first_part, second_part])
@@ -414,4 +410,4 @@ class TFT:
             A matplotlib figure.
         """
 
-        return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize, )
+        return plot(fcst=fcst, ax=ax, xlabel=xlabel, ylabel=ylabel, figsize=figsize,)

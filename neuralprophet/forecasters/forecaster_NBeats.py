@@ -34,7 +34,7 @@ class NBeats:
         learning_rate=3e-2,
         auto_lr_find=False,
         num_workers=3,
-        loss_func='huber'
+        loss_func="huber",
     ):
         """
         Args:
@@ -300,7 +300,9 @@ class NBeats:
             decoder_data["time_idx"] = range(
                 decoder_data["time_idx"].iloc[0] + 1, decoder_data["time_idx"].iloc[0] + periods + 1
             )
-            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=self.freq)[1:]
+            decoder_data["ds"] = pd.date_range(start=encoder_data["ds"].iloc[-1], periods=periods + 1, freq=self.freq)[
+                1:
+            ]
             future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
         elif periods == 0:
             future_dataframe = encoder_data
