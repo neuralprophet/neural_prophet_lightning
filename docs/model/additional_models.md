@@ -89,4 +89,9 @@ future = m.make_future_dataframe(df, preiods = 20, n_historic_predictions=10)
 forecast = m.predict(future)
 ```
 
+### LIBRA framework
+Libra is a benchmarking framework, that we use to benchmark Neural Prophet and all additional models.
+
+For more information about evaluation procedure, please follow [LIBRA documentation](../libre.md)
+
 
