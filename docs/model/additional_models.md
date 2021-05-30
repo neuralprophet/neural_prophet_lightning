@@ -92,6 +92,6 @@ forecast = m.predict(future)
 ### LIBRA framework
 Libra is a benchmarking framework, that we use to benchmark Neural Prophet and all additional models.
 
-For more information about evaluation procedure, please follow [LIBRA documentation](../libre.md)
+For more information about evaluation procedure, please follow [LIBRA documentation](https://github.com/adasegroup/neural_prophet/blob/master/docs/model/libra.md)
 
 
