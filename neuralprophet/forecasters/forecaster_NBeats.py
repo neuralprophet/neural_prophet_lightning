@@ -306,7 +306,7 @@ class NBeats:
             future_dataframe = pd.concat([encoder_data, decoder_data], ignore_index=True)
         elif periods == 0:
             future_dataframe = encoder_data
-        return future_dataframe
+        return future_dataframe.reset_index(drop=True)
 
     def predict(self, future_dataframe):
         """
